@@ -1,0 +1,14 @@
+#goal definition
+float32 acquisition_distance
+float32[] offset_compensation
+float32 edge_tolerance
+---
+#result definition
+local_perception_msgs/WeldingArr welding_list
+int32 percentage
+string skillStatus
+string outcome
+---
+#feedback
+int32 percentage
+string skillStatus

@@ -1,0 +1,2 @@
+int32 welding_index
+geometry_msgs/TransformStamped[] welding_point_stamped

@@ -1,0 +1,757 @@
+Panels:
+  - Class: rviz/Displays
+    Help Height: 78
+    Name: Displays
+    Property Tree Widget:
+      Expanded:
+        - /Global Options1
+        - /Status1
+        - /TF1/Frames1
+        - /PointCloud21
+        - /PointCloud23
+        - /PointCloud24
+        - /PointCloud26
+      Splitter Ratio: 0.5
+    Tree Height: 759
+  - Class: rviz/Selection
+    Name: Selection
+  - Class: rviz/Tool Properties
+    Expanded:
+      - /2D Pose Estimate1
+      - /2D Nav Goal1
+      - /Publish Point1
+    Name: Tool Properties
+    Splitter Ratio: 0.588679016
+  - Class: rviz/Views
+    Expanded:
+      - /Current View1
+    Name: Views
+    Splitter Ratio: 0.5
+  - Class: rviz/Time
+    Experimental: false
+    Name: Time
+    SyncMode: 0
+    SyncSource: ""
+Toolbars:
+  toolButtonStyle: 2
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Alpha: 0.5
+      Cell Size: 1
+      Class: rviz/Grid
+      Color: 160; 160; 164
+      Enabled: false
+      Line Style:
+        Line Width: 0.0299999993
+        Value: Lines
+      Name: Grid
+      Normal Cell Count: 0
+      Offset:
+        X: 0
+        Y: 0
+        Z: 0
+      Plane: XY
+      Plane Cell Count: 10
+      Reference Frame: <Fixed Frame>
+      Value: false
+    - Class: rviz/Image
+      Enabled: false
+      Image Topic: /camera/image_raw_charuco_detection
+      Max Value: 1
+      Median window: 5
+      Min Value: 0
+      Name: Image
+      Normalize Range: true
+      Queue Size: 2
+      Transport Hint: raw
+      Unreliable: false
+      Value: false
+    - Class: rviz/Camera
+      Enabled: false
+      Image Rendering: background and overlay
+      Image Topic: /camera/image_raw_charuco_detection
+      Name: Camera
+      Overlay Alpha: 0.5
+      Queue Size: 2
+      Transport Hint: raw
+      Unreliable: false
+      Value: false
+      Visibility:
+        Grid: true
+        Image: true
+        PointCloud2: true
+        TF: true
+        Value: true
+      Zoom Factor: 1
+    - Class: rviz/TF
+      Enabled: true
+      Frame Timeout: 15
+      Frames:
+        All Enabled: false
+        camera_link:
+          Value: true
+        welding_pose_0:
+          Value: true
+        welding_pose_1:
+          Value: true
+        welding_pose_10:
+          Value: true
+        welding_pose_100:
+          Value: true
+        welding_pose_11:
+          Value: true
+        welding_pose_12:
+          Value: true
+        welding_pose_13:
+          Value: true
+        welding_pose_14:
+          Value: true
+        welding_pose_15:
+          Value: true
+        welding_pose_16:
+          Value: true
+        welding_pose_17:
+          Value: true
+        welding_pose_18:
+          Value: true
+        welding_pose_19:
+          Value: true
+        welding_pose_2:
+          Value: true
+        welding_pose_20:
+          Value: true
+        welding_pose_21:
+          Value: true
+        welding_pose_22:
+          Value: true
+        welding_pose_23:
+          Value: true
+        welding_pose_24:
+          Value: true
+        welding_pose_25:
+          Value: true
+        welding_pose_26:
+          Value: true
+        welding_pose_27:
+          Value: true
+        welding_pose_28:
+          Value: true
+        welding_pose_29:
+          Value: true
+        welding_pose_3:
+          Value: true
+        welding_pose_30:
+          Value: true
+        welding_pose_31:
+          Value: true
+        welding_pose_32:
+          Value: true
+        welding_pose_33:
+          Value: true
+        welding_pose_34:
+          Value: true
+        welding_pose_35:
+          Value: true
+        welding_pose_36:
+          Value: true
+        welding_pose_37:
+          Value: true
+        welding_pose_38:
+          Value: true
+        welding_pose_39:
+          Value: true
+        welding_pose_4:
+          Value: true
+        welding_pose_40:
+          Value: true
+        welding_pose_41:
+          Value: true
+        welding_pose_42:
+          Value: true
+        welding_pose_43:
+          Value: true
+        welding_pose_44:
+          Value: true
+        welding_pose_45:
+          Value: true
+        welding_pose_46:
+          Value: true
+        welding_pose_47:
+          Value: true
+        welding_pose_48:
+          Value: true
+        welding_pose_49:
+          Value: true
+        welding_pose_5:
+          Value: true
+        welding_pose_50:
+          Value: true
+        welding_pose_51:
+          Value: true
+        welding_pose_52:
+          Value: true
+        welding_pose_53:
+          Value: true
+        welding_pose_54:
+          Value: true
+        welding_pose_55:
+          Value: true
+        welding_pose_56:
+          Value: true
+        welding_pose_57:
+          Value: true
+        welding_pose_58:
+          Value: true
+        welding_pose_59:
+          Value: true
+        welding_pose_6:
+          Value: true
+        welding_pose_60:
+          Value: true
+        welding_pose_61:
+          Value: true
+        welding_pose_62:
+          Value: true
+        welding_pose_63:
+          Value: true
+        welding_pose_64:
+          Value: true
+        welding_pose_65:
+          Value: true
+        welding_pose_66:
+          Value: true
+        welding_pose_67:
+          Value: true
+        welding_pose_68:
+          Value: true
+        welding_pose_69:
+          Value: true
+        welding_pose_7:
+          Value: true
+        welding_pose_70:
+          Value: true
+        welding_pose_71:
+          Value: true
+        welding_pose_72:
+          Value: true
+        welding_pose_73:
+          Value: true
+        welding_pose_74:
+          Value: true
+        welding_pose_75:
+          Value: true
+        welding_pose_76:
+          Value: true
+        welding_pose_77:
+          Value: true
+        welding_pose_78:
+          Value: true
+        welding_pose_79:
+          Value: true
+        welding_pose_8:
+          Value: true
+        welding_pose_80:
+          Value: true
+        welding_pose_81:
+          Value: true
+        welding_pose_82:
+          Value: true
+        welding_pose_83:
+          Value: true
+        welding_pose_84:
+          Value: true
+        welding_pose_85:
+          Value: true
+        welding_pose_86:
+          Value: true
+        welding_pose_87:
+          Value: true
+        welding_pose_88:
+          Value: true
+        welding_pose_89:
+          Value: true
+        welding_pose_9:
+          Value: true
+        welding_pose_90:
+          Value: true
+        welding_pose_91:
+          Value: true
+        welding_pose_92:
+          Value: true
+        welding_pose_93:
+          Value: true
+        welding_pose_94:
+          Value: true
+        welding_pose_95:
+          Value: true
+        welding_pose_96:
+          Value: true
+        welding_pose_97:
+          Value: true
+        welding_pose_98:
+          Value: true
+        welding_pose_99:
+          Value: true
+        welding_pose_initial:
+          Value: true
+      Marker Scale: 0.075000003
+      Name: TF
+      Show Arrows: false
+      Show Axes: true
+      Show Names: true
+      Tree:
+        camera_link:
+          welding_pose_0:
+            {}
+          welding_pose_1:
+            {}
+          welding_pose_10:
+            {}
+          welding_pose_100:
+            {}
+          welding_pose_11:
+            {}
+          welding_pose_12:
+            {}
+          welding_pose_13:
+            {}
+          welding_pose_14:
+            {}
+          welding_pose_15:
+            {}
+          welding_pose_16:
+            {}
+          welding_pose_17:
+            {}
+          welding_pose_18:
+            {}
+          welding_pose_19:
+            {}
+          welding_pose_2:
+            {}
+          welding_pose_20:
+            {}
+          welding_pose_21:
+            {}
+          welding_pose_22:
+            {}
+          welding_pose_23:
+            {}
+          welding_pose_24:
+            {}
+          welding_pose_25:
+            {}
+          welding_pose_26:
+            {}
+          welding_pose_27:
+            {}
+          welding_pose_28:
+            {}
+          welding_pose_29:
+            {}
+          welding_pose_3:
+            {}
+          welding_pose_30:
+            {}
+          welding_pose_31:
+            {}
+          welding_pose_32:
+            {}
+          welding_pose_33:
+            {}
+          welding_pose_34:
+            {}
+          welding_pose_35:
+            {}
+          welding_pose_36:
+            {}
+          welding_pose_37:
+            {}
+          welding_pose_38:
+            {}
+          welding_pose_39:
+            {}
+          welding_pose_4:
+            {}
+          welding_pose_40:
+            {}
+          welding_pose_41:
+            {}
+          welding_pose_42:
+            {}
+          welding_pose_43:
+            {}
+          welding_pose_44:
+            {}
+          welding_pose_45:
+            {}
+          welding_pose_46:
+            {}
+          welding_pose_47:
+            {}
+          welding_pose_48:
+            {}
+          welding_pose_49:
+            {}
+          welding_pose_5:
+            {}
+          welding_pose_50:
+            {}
+          welding_pose_51:
+            {}
+          welding_pose_52:
+            {}
+          welding_pose_53:
+            {}
+          welding_pose_54:
+            {}
+          welding_pose_55:
+            {}
+          welding_pose_56:
+            {}
+          welding_pose_57:
+            {}
+          welding_pose_58:
+            {}
+          welding_pose_59:
+            {}
+          welding_pose_6:
+            {}
+          welding_pose_60:
+            {}
+          welding_pose_61:
+            {}
+          welding_pose_62:
+            {}
+          welding_pose_63:
+            {}
+          welding_pose_64:
+            {}
+          welding_pose_65:
+            {}
+          welding_pose_66:
+            {}
+          welding_pose_67:
+            {}
+          welding_pose_68:
+            {}
+          welding_pose_69:
+            {}
+          welding_pose_7:
+            {}
+          welding_pose_70:
+            {}
+          welding_pose_71:
+            {}
+          welding_pose_72:
+            {}
+          welding_pose_73:
+            {}
+          welding_pose_74:
+            {}
+          welding_pose_75:
+            {}
+          welding_pose_76:
+            {}
+          welding_pose_77:
+            {}
+          welding_pose_78:
+            {}
+          welding_pose_79:
+            {}
+          welding_pose_8:
+            {}
+          welding_pose_80:
+            {}
+          welding_pose_81:
+            {}
+          welding_pose_82:
+            {}
+          welding_pose_83:
+            {}
+          welding_pose_84:
+            {}
+          welding_pose_85:
+            {}
+          welding_pose_86:
+            {}
+          welding_pose_87:
+            {}
+          welding_pose_88:
+            {}
+          welding_pose_89:
+            {}
+          welding_pose_9:
+            {}
+          welding_pose_90:
+            {}
+          welding_pose_91:
+            {}
+          welding_pose_92:
+            {}
+          welding_pose_93:
+            {}
+          welding_pose_94:
+            {}
+          welding_pose_95:
+            {}
+          welding_pose_96:
+            {}
+          welding_pose_97:
+            {}
+          welding_pose_98:
+            {}
+          welding_pose_99:
+            {}
+          welding_pose_initial:
+            {}
+      Update Interval: 0
+      Value: true
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 0.593954325
+        Min Value: -0.00429403782
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz/PointCloud2
+      Color: 255; 255; 255
+      Color Transformer: RGB8
+      Decay Time: 0
+      Enabled: false
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Max Intensity: 4096
+      Min Color: 0; 0; 0
+      Min Intensity: 0
+      Name: PointCloud2
+      Position Transformer: XYZ
+      Queue Size: 1
+      Selectable: true
+      Size (Pixels): 2
+      Size (m): 0.00999999978
+      Style: Points
+      Topic: /publisher/camera/depth_registered/points
+      Unreliable: false
+      Use Fixed Frame: true
+      Use rainbow: true
+      Value: false
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz/PointCloud2
+      Color: 170; 0; 0
+      Color Transformer: RGB8
+      Decay Time: 0
+      Enabled: false
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Max Intensity: 4096
+      Min Color: 0; 0; 0
+      Min Intensity: 0
+      Name: PointCloud2
+      Position Transformer: XYZ
+      Queue Size: 10
+      Selectable: true
+      Size (Pixels): 2
+      Size (m): 0.100000001
+      Style: Points
+      Topic: /cloud_seg_reference
+      Unreliable: false
+      Use Fixed Frame: true
+      Use rainbow: true
+      Value: false
+    - Alpha: 0.100000001
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz/PointCloud2
+      Color: 0; 85; 0
+      Color Transformer: FlatColor
+      Decay Time: 0
+      Enabled: true
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Max Intensity: 4096
+      Min Color: 0; 0; 0
+      Min Intensity: 0
+      Name: PointCloud2
+      Position Transformer: XYZ
+      Queue Size: 10
+      Selectable: true
+      Size (Pixels): 3
+      Size (m): 0.00999999978
+      Style: Points
+      Topic: /output_region_cloud
+      Unreliable: false
+      Use Fixed Frame: true
+      Use rainbow: true
+      Value: true
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz/PointCloud2
+      Color: 255; 85; 127
+      Color Transformer: FlatColor
+      Decay Time: 0
+      Enabled: true
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Max Intensity: 4096
+      Min Color: 0; 0; 0
+      Min Intensity: 0
+      Name: PointCloud2
+      Position Transformer: XYZ
+      Queue Size: 10
+      Selectable: true
+      Size (Pixels): 3
+      Size (m): 0.00999999978
+      Style: Spheres
+      Topic: /output_robot_poses_cloud
+      Unreliable: false
+      Use Fixed Frame: true
+      Use rainbow: true
+      Value: true
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz/PointCloud2
+      Color: 255; 255; 255
+      Color Transformer: RGB8
+      Decay Time: 0
+      Enabled: true
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Max Intensity: 4096
+      Min Color: 0; 0; 0
+      Min Intensity: 0
+      Name: PointCloud2
+      Position Transformer: XYZ
+      Queue Size: 10
+      Selectable: true
+      Size (Pixels): 3
+      Size (m): 0.00100000005
+      Style: Flat Squares
+      Topic: /output_gt_line_cloud_cloud_
+      Unreliable: false
+      Use Fixed Frame: true
+      Use rainbow: true
+      Value: true
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz/PointCloud2
+      Color: 255; 255; 255
+      Color Transformer: RGB8
+      Decay Time: 0
+      Enabled: true
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Max Intensity: 4096
+      Min Color: 0; 0; 0
+      Min Intensity: 0
+      Name: PointCloud2
+      Position Transformer: XYZ
+      Queue Size: 10
+      Selectable: true
+      Size (Pixels): 3
+      Size (m): 0.00999999978
+      Style: Points
+      Topic: /cloud_filtered
+      Unreliable: false
+      Use Fixed Frame: true
+      Use rainbow: true
+      Value: true
+  Enabled: true
+  Global Options:
+    Background Color: 127; 127; 127
+    Default Light: true
+    Fixed Frame: camera_link
+    Frame Rate: 30
+  Name: root
+  Tools:
+    - Class: rviz/Interact
+      Hide Inactive Objects: true
+    - Class: rviz/MoveCamera
+    - Class: rviz/Select
+    - Class: rviz/FocusCamera
+    - Class: rviz/Measure
+    - Class: rviz/SetInitialPose
+      Topic: /initialpose
+    - Class: rviz/SetGoal
+      Topic: /move_base_simple/goal
+    - Class: rviz/PublishPoint
+      Single click: true
+      Topic: /clicked_point
+  Value: true
+  Views:
+    Current:
+      Class: rviz/Orbit
+      Distance: 0.533399165
+      Enable Stereo Rendering:
+        Stereo Eye Separation: 0.0599999987
+        Stereo Focal Distance: 1
+        Swap Stereo Eyes: false
+        Value: false
+      Focal Point:
+        X: 0.0619717166
+        Y: 0.010488919
+        Z: -0.0193737969
+      Focal Shape Fixed Size: true
+      Focal Shape Size: 0.0500000007
+      Invert Z Axis: false
+      Name: Current View
+      Near Clip Distance: 0.00999999978
+      Pitch: 0.615201712
+      Target Frame: charuco
+      Value: Orbit (rviz)
+      Yaw: 2.1235857
+    Saved: ~
+Window Geometry:
+  Camera:
+    collapsed: false
+  Displays:
+    collapsed: false
+  Height: 1056
+  Hide Left Dock: false
+  Hide Right Dock: false
+  Image:
+    collapsed: false
+  QMainWindow State: 000000ff00000000fd00000004000000000000016a0000038dfc020000000cfb0000001200530065006c0065006300740069006f006e00000001e10000009b0000006300fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c00610079007301000000280000038d000000de00fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000000a0049006d00610067006500000001ae000001360000001800fffffffb0000000c00430061006d006500720061000000028d000001280000001800fffffffb0000000c00430061006d00650072006101000002a60000010f0000000000000000fb0000000a0049006d00610067006500000002e7000000ce0000000000000000000000010000010f0000038dfc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a0056006900650077007301000000280000038d000000b900fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e100000197000000030000073f00000042fc0100000002fb0000000800540069006d006501000000000000073f0000028800fffffffb0000000800540069006d00650100000000000004500000000000000000000004ba0000038d00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  Selection:
+    collapsed: false
+  Time:
+    collapsed: false
+  Tool Properties:
+    collapsed: false
+  Views:
+    collapsed: false
+  Width: 1855
+  X: 1985
+  Y: 24
