@@ -62,7 +62,7 @@ target_link_libraries(${PROJECT_NAME}
                       ${catkin_LIBRARIES}
                       ${OpenCV_LIBRARIES}
                       ${PCL_LIBRARIES}
-                      common
+                      #common
                       )
 
 ## Define a executable

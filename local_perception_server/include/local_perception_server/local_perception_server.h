@@ -11,6 +11,7 @@
 #include <numeric>
 #include <fstream>
 #include <iostream>
+#include <angles/angles.h>
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
@@ -36,6 +37,8 @@
 #include <bits/stdc++.h>
 
 #include <local_perception_server/common/pcl_complement.h>
+#include <local_perception_server/common/verbosity_levels.h>
+
 #include <actionlib/server/simple_action_server.h>
 #include <local_perception_msgs/LocalPerceptionAction.h>
 #include <local_perception_msgs/PointArr.h>
@@ -57,15 +60,28 @@ namespace local_perception_server {
                             direction_vector;
         };
 
+        struct BoxParametrization{
+            std::vector<double> min_vertex_arr, max_vertex_arr;
+        };
+
+        enum ERROR_LIST{
+            CLOUD_RECEPTION_TIMOUT = 101,
+            PLANE_SEG_SMALL_INPUT_CLOUD_SIZE,
+            PLANE_SEG_UNABLE_TO_ESTIMATE_A_FIT_MODEL,
+            INPUT_CLOUD_CROPBOX_ERROR,
+            INPUT_CLOUD_VOXELGRID_ERROR,
+            SMALL_NUMBER_OF_PLANES_FOUND,
+            LINE_ESTIMATION_PLANE_PARALLEL_ERROR
+        };
+
         LocalPerception();
         ~LocalPerception();
 
         void start(); //start the server
         void executeCB (const local_perception_msgs::LocalPerceptionGoalConstPtr &goal); // recognize the goal request
-        bool executeProcess(); // execute the procedure after the goal request
         void feedback (float percentage);
         void setSucceeded (std::string outcome = "succeeded");
-        void setAborted (std::string outcome = "aborted");
+        void setAborted (std::string outcome);
         bool checkPreemption ();
 
         void setupParameterServer(ros::NodeHandlePtr &_node_handle,
@@ -88,7 +104,7 @@ namespace local_perception_server {
         void setupPlaneIntersectionConfigurationFromParameterServer(ros::NodeHandlePtr &_node_handle,
                                                                     ros::NodeHandlePtr &_private_node_handle);
 
-        bool run();
+        bool run(local_perception_msgs::LocalPerceptionGoalConstPtr);
 
 
     protected:
@@ -107,7 +123,10 @@ namespace local_perception_server {
                left_rate_to_all_candidates_,
                distance_to_line_threshold_,
                gt_line_offset_,
-               input_cloud_timeout_threshold_ = 5.0;
+               input_cloud_timeout_threshold_,
+               hfov_,
+               vfov_,
+               distance_range_;
 
         int max_iterations_,
             normal_k_search_,
@@ -135,12 +154,11 @@ namespace local_perception_server {
                     output_robot_poses_cloud_,
                     output_gt_line_cloud_cloud_,
                     gt_line_frame_id_,
-                    gt_line_axis_;
+                    gt_line_axis_,
+                    aborted_msg_;
 
         std::vector<double> voxel_leaf_sizes_arr_,
-                            output_offset_threshold_arr_,
-                            min_cropbox_arr_,
-                            max_cropbox_arr_;
+                            output_offset_threshold_arr_;
 
 
         ros::NodeHandlePtr node_handle_,
@@ -193,6 +211,10 @@ namespace local_perception_server {
 
         bool createLineCloud(Eigen::VectorXf& coefs_line, //first 3 parameters- initial point nearest to zero. last 3 parameters = direction vector
                              pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr& line_cloud);
+
+        bool setupCropboxParameters(double _linear_distance,BoxParametrization &_cropbox_parameters);
+
+        bool applyCorrection(const std::vector<float> offset, std::vector<geometry_msgs::TransformStamped> &_poses_arr );
 
     };
 }

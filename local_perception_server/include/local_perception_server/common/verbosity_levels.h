@@ -1,10 +1,9 @@
-#pragma once
 
 /**\file verbosity_levels.h
  * \brief Description...
  *
- * @version 1.0
- * @author Carlos Miguel Correia da Costa
+ * @version 2.0
+ * @authors Carlos Miguel Correia da Costa and João Pedro Carvalho de Souza
  */
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   <macros>   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -32,7 +31,14 @@ namespace local_perception_server {
 namespace verbosity_levels {
 
 bool setVerbosityLevelPCL(std::string level);
+
 bool setVerbosityLevelROS(std::string level);
+ros::console::levels::Level verifyVerbosityLevelROS();
+bool isROSDebug();
+bool isROSWarn();
+bool isROSInfo();
+bool isROSError();
+bool isROSFatal();
 
 } /* namespace math_utils */
 } /* namespace grasp_estimation_skill */

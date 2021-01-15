@@ -1,4 +1,6 @@
+ros_verbosity_level: "DEBUG"
 input_cloud_topic: "/publisher/camera/depth_registered/points"
+input_cloud_timeout_threshold: 7.0
 voxel_grid_filter:
   leaf_sizes: [0.0000, 0.0000, 0.0000]
 cropbox:

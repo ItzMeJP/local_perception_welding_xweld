@@ -7,22 +7,25 @@
 
 #include <local_perception_server/local_perception_server.h>
 
-
 int main(int argc, char** argv)
 {
 
     ros::init(argc, argv, "local_perception_server_node");
 
+    ros::NodeHandlePtr node_handle(new ros::NodeHandle());
+    ros::NodeHandlePtr private_node_handle(new ros::NodeHandle("~"));
+
+    std::string ros_verbosity_level;
+    private_node_handle->param("ros_verbosity_level", ros_verbosity_level, std::string("DEBUG"));
+    local_perception_server::verbosity_levels::setVerbosityLevelROS(ros_verbosity_level);
+
     ROS_INFO(">> Aperte enter");
     getchar();
     ROS_INFO(">> Enter pressionado");
 
-    ros::NodeHandlePtr node_handle(new ros::NodeHandle());
-    ros::NodeHandlePtr private_node_handle(new ros::NodeHandle("~"));
-
     local_perception_server::LocalPerception node;
     node.setupParameterServer(node_handle,private_node_handle);
-    node.run();
+    node.start();
 
     ros::spin();
 

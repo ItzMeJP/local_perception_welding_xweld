@@ -40,7 +40,8 @@ namespace local_perception_server {
             Eigen::Vector4f min(_min_arr.at(0), _min_arr.at(1), _min_arr.at(2), 1.0),
                             max(_max_arr.at(0), _max_arr.at(1), _max_arr.at(2), 1.0);
 
-            applyCropbox(_cloud, min, max);
+            if(!applyCropbox(_cloud, min, max))
+                return false;
 
             return true;
         }

@@ -28,8 +28,10 @@ namespace local_perception_server {
         actionServer_->start();
     }
 
-    void LocalPerception::executeCB (const local_perception_msgs::LocalPerceptionGoalConstPtr &goal) {
-        run()?setSucceeded():setAborted();
+    void LocalPerception::executeCB (const local_perception_msgs::LocalPerceptionGoalConstPtr &_goal) {
+        result_.welding_list.welding.clear();
+        aborted_msg_ = "Aborted. Error(s):";
+        run(_goal)?setSucceeded():setAborted(aborted_msg_);
     }
 
     void LocalPerception::setSucceeded (std::string outcome) {
@@ -97,18 +99,9 @@ namespace local_perception_server {
             return;
         }
 
-        if (!_private_node_handle->param("cropbox/min_vertex", min_cropbox_arr_, std::vector<double>())) {
-
-            ROS_WARN_STREAM("Error reading min cropbox vertex. Deactivating cropbox.");
-            cropbox_activation_ = false;
-        }
-
-        if (!_private_node_handle->param("cropbox/max_vertex", max_cropbox_arr_, std::vector<double>())) {
-
-            ROS_WARN_STREAM("Error reading max cropbox vertex. Deactivating cropbox.");
-            cropbox_activation_ = false;
-        }
-
+        _private_node_handle->param<double>("cropbox/horizontal_fov", hfov_, 80.0);
+        _private_node_handle->param<double>("cropbox/vertical_fov", vfov_, 60.0);
+        _private_node_handle->param<double>("cropbox/distance_range", distance_range_, 0.025);
 
     }
 
@@ -180,6 +173,9 @@ namespace local_perception_server {
 
         _private_node_handle->param<double>("plane_intersection/distance_to_line_threshold",
                                             distance_to_line_threshold_, 0.1);
+        _private_node_handle->param<double>("input_cloud_timeout_threshold",
+                                            input_cloud_timeout_threshold_, 5.0);
+
         _private_node_handle->param<int>("plane_intersection/index_cloud_plane_a", index_cloud_plane_a_, 1);
         _private_node_handle->param<int>("plane_intersection/index_cloud_plane_b", index_cloud_plane_b_, 0);
 
@@ -222,12 +218,13 @@ namespace local_perception_server {
         float refresh_period = 0.5;
         int input_cloud_timeout_counter = 0;
 
-        ROS_INFO_STREAM("Subscribe topic: " << input_cloud_topic_);
+        ROS_DEBUG_STREAM("Subscribe topic: " << input_cloud_topic_);
 
         while (ros::ok() && cloud_raw->data.size() == 0) {
 
             if(input_cloud_timeout_counter*refresh_period > input_cloud_timeout_threshold_){
                 ROS_ERROR_STREAM(input_cloud_timeout_threshold_ << " [s] timout exceeded. ");
+                aborted_msg_ += " " + std::to_string(ERROR_LIST::CLOUD_RECEPTION_TIMOUT);
                 return false;
             }
 
@@ -289,7 +286,6 @@ namespace local_perception_server {
                                                      complemented_seg_clouds(
                                                              new PointCloudLP());
 
-        // Create a table of colors (256 colors)
         pcl::GlasbeyLUT colors;
 
         std::vector<pcl::PointCloud<pcl::PointXYZRGB> > vec_full_seg_clouds;
@@ -302,6 +298,7 @@ namespace local_perception_server {
 
         if (nr_points < 1) {
             ROS_ERROR_STREAM("Input cloud has size less than 1: " << nr_points);
+            aborted_msg_ += " " + std::to_string(ERROR_LIST::PLANE_SEG_SMALL_INPUT_CLOUD_SIZE);
             return false;
         }
 
@@ -322,6 +319,7 @@ namespace local_perception_server {
 
             if (inliers->indices.size() == 0) {
                 ROS_ERROR_STREAM("Could not estimate a model for the given dataset.");
+                aborted_msg_ += " " + std::to_string(ERROR_LIST::PLANE_SEG_UNABLE_TO_ESTIMATE_A_FIT_MODEL);
                 return false;
             }
 
@@ -332,13 +330,13 @@ namespace local_perception_server {
             seg_cloud_num++;
 
             if (discarting_num >= tolerance_iterator_threshold_) {
-                ROS_INFO_STREAM("Finishing, not relevant cloud left");
+                ROS_WARN_STREAM("Finishing, not relevant cloud left");
                 break;
             }
 
             if (inliers->indices.size() < inliers_threshold_weight_ * first_cloud_size) {
-                ROS_INFO_STREAM("Not enough inliers (" << inliers->indices.size() << "). Discarting #" << seg_cloud_num
-                                                       << " segmentated cloud");
+                ROS_WARN_STREAM("Not enough inliers (" << inliers->indices.size() << "). Discarding #" << seg_cloud_num
+                                                       << " segmented cloud(s)");
                 extract.setNegative(true); //to extract the complemented points
                 extract.filter(*complemented_seg_clouds);
                 _input_cloud.swap(
@@ -349,11 +347,11 @@ namespace local_perception_server {
             discarting_num = 0;
 
             if (color_it >= pcl::GlasbeyLUT::size()) {
-                ROS_INFO_STREAM("Color out of range. Setting 0 back.");
+                ROS_WARN_STREAM("Plane color out of range. Setting 0 back.");
                 color_it = 0;
             }
 
-            ROS_INFO_STREAM("Size of the #" << seg_cloud_num << " segmented cloud: " << seg_clouds->size());
+            ROS_DEBUG_STREAM("Size of the #" << seg_cloud_num << " segmented cloud: " << seg_clouds->size());
 
             for (size_t i = 0; i < seg_clouds->size(); i++) {
                 seg_clouds->points.at(i).r = colors.at(color_it).r;
@@ -380,7 +378,7 @@ namespace local_perception_server {
         *_segmented_cloud_merged = *full_seg_clouds;
         _segmented_cloud_merged->header = _input_cloud->header;
 
-        ROS_INFO("SAC method finished");
+        ROS_INFO("SAC method finished.");
         return true;
     }
 
@@ -398,7 +396,7 @@ namespace local_perception_server {
         return a.second < b.second;
     }
 
-    bool LocalPerception::run () {
+    bool LocalPerception::run (local_perception_msgs::LocalPerceptionGoalConstPtr _goal) {
 
         PointCloudPtrLP     segmented_cloud_merged      (new PointCloudLP);
         PointCloudPtrLP     aux_cloud_a                 (new PointCloudLP);
@@ -409,22 +407,26 @@ namespace local_perception_server {
 
         std::vector<PointCloudLP> arr_cloud;
         std::vector<pcl::ModelCoefficients> coefs_output_arr;
-        //Eigen::VectorXf intersection_line_coefs;
         InfiniteLineDescriptors line;
         std::vector<Eigen::Vector3d> projected_point_arr;
+        std::vector<geometry_msgs::TransformStamped> poses_arr;
 
         if(!inputPointCloudVerification())
             return false;
 
         if (cropbox_activation_) {
-            if (!local_perception_server::pcl_complement::applyCropbox(input_cloud_, min_cropbox_arr_,
-                                                                       max_cropbox_arr_))
+            BoxParametrization cropbox_parameters;
+            if (!setupCropboxParameters(_goal->acquisition_distance, cropbox_parameters) ||
+                !local_perception_server::pcl_complement::applyCropbox(input_cloud_, cropbox_parameters.min_vertex_arr,cropbox_parameters.max_vertex_arr)) {
+                aborted_msg_ += " " + std::to_string(ERROR_LIST::INPUT_CLOUD_CROPBOX_ERROR);
                 return false;
+            }
         }
 
-        if(!local_perception_server::pcl_complement::applyVoxelGrid(input_cloud_, voxel_leaf_sizes_arr_))
+        if(!local_perception_server::pcl_complement::applyVoxelGrid(input_cloud_, voxel_leaf_sizes_arr_)){
+            aborted_msg_ += " " + std::to_string(ERROR_LIST::INPUT_CLOUD_VOXELGRID_ERROR);
             return false;
-
+        }
 
         if(!this->planeSegmentation(input_cloud_, segmented_cloud_merged, arr_cloud, coefs_output_arr))
             return false;
@@ -433,6 +435,7 @@ namespace local_perception_server {
 
         if(arr_cloud.size()<2){
             ROS_ERROR_STREAM("Not enough planes were found.");
+            aborted_msg_ += " " + std::to_string(ERROR_LIST::SMALL_NUMBER_OF_PLANES_FOUND);
             return false;
         }
 
@@ -443,55 +446,56 @@ namespace local_perception_server {
 
         *aux_cloud_ab              = *aux_cloud_a + *aux_cloud_b;
 
-        this->generateIntersectionLine(coefs_output_arr.at(index_cloud_plane_a_),
-                                       coefs_output_arr.at(index_cloud_plane_b_), intersection_line_cloud,
-                                       line);
+        if(!this->generateIntersectionLine(coefs_output_arr.at(index_cloud_plane_a_),coefs_output_arr.at(index_cloud_plane_b_), intersection_line_cloud,line)
+                                       || !this->calculateIntersectionRegion(aux_cloud_ab, line, intersection_region_cloud)
+                                       || !this->projectPointCloudToLine(intersection_region_cloud, line, projected_point_arr)
+                                       || !this->generateWeldingPoses (projected_point_arr, line, intersection_region_cloud->header.frame_id, poses_arr)
+                                       || !this->applyCorrection(_goal->offset_compensation, poses_arr) )
+            return false;
 
-        this->calculateIntersectionRegion(aux_cloud_ab, line, intersection_region_cloud); //TODO: be carefull with aux_cloud
 
-        this->projectPointCloudToLine(intersection_region_cloud, line, projected_point_arr);
 
-        std::vector<geometry_msgs::TransformStamped> poses_arr;
+        local_perception_msgs::PointArr welding_pose;
+        welding_pose.welding_line_index = 0;
+        welding_pose.welding_point_stamped = poses_arr;
 
-        this->generateWeldingPoses (projected_point_arr, line, intersection_region_cloud->header.frame_id, poses_arr);
+        result_.welding_list.welding.push_back(welding_pose);
 
-        if(true) //pub_tf_
-        {
-            for (size_t i = 0; i < poses_arr.size() ; ++i) {
+        if(verbosity_levels::isROSDebug()) {
+
+            for (size_t i = 0; i < poses_arr.size(); ++i) {
                 static_broadcaster_.sendTransform(poses_arr.at(i));
             }
-        }
 
-        if(true) //pub line estimation reference point
-        {
             geometry_msgs::TransformStamped pRefTf;
-            pRefTf.header.frame_id = intersection_region_cloud->header.frame_id;
-            pRefTf.header.stamp    = ros::Time::now();
+            pRefTf.header.frame_id         = intersection_region_cloud->header.frame_id;
+            pRefTf.header.stamp            = ros::Time::now();
             pRefTf.child_frame_id          = "welding_pose_reference";
             pRefTf.transform.translation.x = line.reference_point[0] + output_offset_threshold_arr_.at(0);
             pRefTf.transform.translation.y = line.reference_point[1] + output_offset_threshold_arr_.at(1);
             pRefTf.transform.translation.z = line.reference_point[2] + output_offset_threshold_arr_.at(2);
-            pRefTf.transform.rotation.x = 0;
-            pRefTf.transform.rotation.y = 0;
-            pRefTf.transform.rotation.z = 0;
-            pRefTf.transform.rotation.w = 1;
+            pRefTf.transform.rotation.x    = 0;
+            pRefTf.transform.rotation.y    = 0;
+            pRefTf.transform.rotation.z    = 0;
+            pRefTf.transform.rotation.w    = 1;
             static_broadcaster_.sendTransform(pRefTf);
+
+            local_perception_server::pcl_complement::pubCloud(pub_input_filtered_, input_cloud_);
+            local_perception_server::pcl_complement::pubCloud(pub_seg_, aux_cloud_ab);
+            local_perception_server::pcl_complement::pubCloud(pub_seg_merged_, segmented_cloud_merged);
+            local_perception_server::pcl_complement::pubCloud(pub_intersection_line_cloud_, intersection_line_cloud);
+            local_perception_server::pcl_complement::pubCloud(pub_intersection_region_cloud_,
+                                                              intersection_region_cloud);
         }
 
-        local_perception_server::pcl_complement::pubCloud(pub_input_filtered_, input_cloud_);
-        local_perception_server::pcl_complement::pubCloud(pub_seg_, aux_cloud_ab);
-        local_perception_server::pcl_complement::pubCloud(pub_seg_merged_, segmented_cloud_merged);
-        local_perception_server::pcl_complement::pubCloud(pub_intersection_line_cloud_, intersection_line_cloud);
-        local_perception_server::pcl_complement::pubCloud(pub_intersection_region_cloud_, intersection_region_cloud);
-
         return true;
+
     }
 
     bool LocalPerception::generateIntersectionLine (pcl::ModelCoefficients coefs_plane_a,
                                           pcl::ModelCoefficients coefs_plane_b,
                                           PointCloudPtrLP  &line_cloud,
                                           InfiniteLineDescriptors &line)
-                                          //Eigen::VectorXf &coefs_line) //first 3 parameters- initial point nearest to zero. last 3 parameters = direction vector
     {
         Eigen::Vector4f plane_coef_a, plane_coef_b;
         Eigen::VectorXf coefs_line;
@@ -503,6 +507,7 @@ namespace local_perception_server {
 
         if (!pcl::planeWithPlaneIntersection(plane_coef_a, plane_coef_b, coefs_line, 0.1)) {
             ROS_ERROR("Error in line equation estimation. Be sure that both planes are not parallel.");
+            aborted_msg_ += " " + std::to_string(ERROR_LIST::LINE_ESTIMATION_PLANE_PARALLEL_ERROR);
             return false;
         }
 
@@ -548,21 +553,15 @@ namespace local_perception_server {
                 intersection_region_cloud->push_back(_input_cloud->points.at(it));
         }
 
-        ROS_INFO_STREAM("###################");
-
-        ROS_INFO_STREAM("Line initial pose:\n " << _line.reference_point);
-        ROS_INFO_STREAM("Direction vector:\n " << _line.direction_vector);
-
-        ROS_INFO_STREAM("###################");
-
-        ROS_INFO_STREAM("Max distance:" << max_v);
-        ROS_INFO_STREAM("Min distance:" << min_v);
-
         intersection_region_cloud->header = input_cloud_->header;
         intersection_region_cloud->height = 1;
         intersection_region_cloud->width  = intersection_region_cloud->size();
 
-        ROS_INFO_STREAM("Intersection region size: " << intersection_region_cloud->width);
+        ROS_DEBUG_STREAM("Line reference point: [" << _line.reference_point.x() << ", "<< _line.reference_point.y() << ", " << _line.reference_point.z() << "]" );
+        ROS_DEBUG_STREAM("Direction vector: [" << _line.direction_vector.x() << ", "<< _line.direction_vector.y() << ", " << _line.direction_vector.z() << "]" );
+        ROS_DEBUG_STREAM("Maximum distance from line:" << max_v);
+        ROS_DEBUG_STREAM("Minimum distance from line:" << min_v);
+        ROS_DEBUG_STREAM("Intersection region size: " << intersection_region_cloud->width);
 
         return true;
     }
@@ -663,7 +662,7 @@ namespace local_perception_server {
         //robot_poses_cloud->width  = robot_poses_cloud->size();
         //robot_poses_cloud->height = 1;
 
-        return 0;
+        return true;
     }
 
     bool LocalPerception::createLineCloud (
@@ -698,4 +697,45 @@ namespace local_perception_server {
         return true;
     }
 
+    bool LocalPerception::setupCropboxParameters(double _linear_distance, BoxParametrization &_cropbox_parameters){
+
+        _cropbox_parameters.max_vertex_arr.clear();
+        _cropbox_parameters.min_vertex_arr.clear();
+
+        double vfov_rad = angles::from_degrees (vfov_),
+               hfov_rad = angles::from_degrees (hfov_),
+               h_projection, v_projection;
+
+        h_projection = _linear_distance * atan(hfov_rad * .5);
+        v_projection = _linear_distance * atan(vfov_rad * .5);
+
+        _cropbox_parameters.max_vertex_arr.push_back(_linear_distance+distance_range_);
+        _cropbox_parameters.max_vertex_arr.push_back(h_projection);
+        _cropbox_parameters.max_vertex_arr.push_back(v_projection);
+
+        _cropbox_parameters.min_vertex_arr.push_back(_linear_distance-distance_range_);
+        _cropbox_parameters.min_vertex_arr.push_back(-h_projection);
+        _cropbox_parameters.min_vertex_arr.push_back(-v_projection);
+
+        ROS_DEBUG_STREAM("Cropbox maximum parameters defined: [" << _cropbox_parameters.max_vertex_arr.at(0) <<" ," << _cropbox_parameters.max_vertex_arr.at(1) <<" ," << _cropbox_parameters.max_vertex_arr.at(2) << "]");
+        ROS_DEBUG_STREAM("Cropbox minimum parameters defined: [" << _cropbox_parameters.min_vertex_arr.at(0) <<" ," << _cropbox_parameters.min_vertex_arr.at(1) <<" ," << _cropbox_parameters.min_vertex_arr.at(2) << "]");
+        return true;
+    }
+
+    bool LocalPerception::applyCorrection(const std::vector<float> offset, std::vector<geometry_msgs::TransformStamped> &_poses_arr ){
+
+        std::vector<geometry_msgs::TransformStamped>::iterator it  = _poses_arr.begin();
+
+        while(it != _poses_arr.end() && ros::ok())
+        {
+            it->transform.translation.x  = it->transform.translation.x + offset.at(0);
+            it->transform.translation.y  = it->transform.translation.y + offset.at(1);
+            it->transform.translation.z  = it->transform.translation.z + offset.at(2);
+            it++;
+        }
+
+        ROS_DEBUG_STREAM("Offset of [" << offset.at(0) << ", "<< offset.at(1) << ", " << offset.at(2)  << "] applied");
+        return true;
+
+    }
 }
