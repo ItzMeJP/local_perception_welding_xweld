@@ -220,11 +220,11 @@ namespace local_perception_server {
 
         ROS_DEBUG_STREAM("Subscribe topic: " << input_cloud_topic_);
 
-        while (ros::ok() && cloud_raw->data.size() == 0) {
+        while (ros::ok() && input_cloud_->size() == 0) {
 
             if(input_cloud_timeout_counter*refresh_period > input_cloud_timeout_threshold_){
                 ROS_ERROR_STREAM(input_cloud_timeout_threshold_ << " [s] timout exceeded. ");
-                aborted_msg_ += " " + std::to_string(ERROR_LIST::CLOUD_RECEPTION_TIMOUT);
+                aborted_msg_ += " " + std::to_string(ERROR_LIST::CLOUD_RECEPTION_TIMEOUT);
                 return false;
             }
 
@@ -236,6 +236,20 @@ namespace local_perception_server {
         }
 
         ROS_INFO_STREAM("Input cloud received.");
+
+        if(!input_cloud_->is_dense) {
+            ROS_WARN_STREAM("The input point cloud is NOT dense. Transforming to dense...");
+            boost::shared_ptr<std::vector<int>> indices(new std::vector<int>);
+            pcl::removeNaNFromPointCloud(*input_cloud_, *indices);
+            pcl::ExtractIndices<pcl::PointXYZRGBNormal> extract;
+            extract.setInputCloud(input_cloud_);
+            extract.setIndices(indices);
+            extract.setNegative(false);
+            extract.filter(*input_cloud_);
+            input_cloud_->is_dense = true;
+            input_cloud_->height = 1;
+            input_cloud_->width = input_cloud_->size();
+        }
         return true;
     }
 

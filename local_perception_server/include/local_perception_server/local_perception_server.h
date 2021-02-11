@@ -65,7 +65,7 @@ namespace local_perception_server {
         };
 
         enum ERROR_LIST{
-            CLOUD_RECEPTION_TIMOUT = 101,
+            CLOUD_RECEPTION_TIMEOUT = 101,
             PLANE_SEG_SMALL_INPUT_CLOUD_SIZE,
             PLANE_SEG_UNABLE_TO_ESTIMATE_A_FIT_MODEL,
             INPUT_CLOUD_CROPBOX_ERROR,
