@@ -1,12 +1,15 @@
 ros_verbosity_level: "DEBUG"
-input_cloud_topic: "/publisher/camera/depth_registered/points"
+pcl_verbosity_level: "ERROR"
+input_cloud_topic: "/camera/depth/color/points"
 input_cloud_timeout_threshold: 7.0
 voxel_grid_filter:
   leaf_sizes: [0.0000, 0.0000, 0.0000]
 cropbox:
   enable: TRUE
-  min_vertex: [.15,-0.03125,-0.053125  ]
-  max_vertex: [.25, 0.09375, 0.053125 ]
+  frame_id_norm: 0 # 0 - Optical Convention  1 - ROS convention
+  horizontal_fov: 86.0 #degree
+  vertical_fov: 56.0
+  distance_range: 0.025 #toelrance range around the distance defined by the goal
 sac_method:
   method_type: 0 # SAC_RANSAC  = 0; SAC_LMEDS   = 1; SAC_MSAC    = 2; SAC_RRANSAC = 3; SAC_RMSAC   = 4; SAC_MLESAC  = 5; SAC_PROSAC  = 6;
   model_type: 11
@@ -30,7 +33,6 @@ line_error:
   gt_line_frame_id: "wobj_weld"
   gt_line_axis: "x" #line direction
   gt_line_offset: 1 #line length
-
 
 #MODEL TYPES INDEXES
 #    SACMODEL_PLANE                 -0

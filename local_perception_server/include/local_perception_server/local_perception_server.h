@@ -74,6 +74,11 @@ namespace local_perception_server {
             LINE_ESTIMATION_PLANE_PARALLEL_ERROR
         };
 
+        enum CAMERA_FRAME_NORM_TYPE{
+            OPTICAL,
+            ROS
+        };
+
         LocalPerception();
         ~LocalPerception();
 
@@ -136,7 +141,8 @@ namespace local_perception_server {
             index_cloud_plane_b_,
             sac_type_,
             model_type_,
-            welding_interval_;
+            welding_interval_,
+            cropbox_frame_id_norm_;
 
         bool cropbox_activation_;
 

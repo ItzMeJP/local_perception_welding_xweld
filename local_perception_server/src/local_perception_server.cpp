@@ -93,6 +93,7 @@ namespace local_perception_server {
                                                                           ros::NodeHandlePtr &_private_node_handle) {
 
         _private_node_handle->param<bool>("cropbox/enable", cropbox_activation_, false);
+        _private_node_handle->param<int>("cropbox/frame_id_norm", cropbox_frame_id_norm_, false);  // which convention is used to define the point cloud parent frame
 
         if (!cropbox_activation_) {
             ROS_WARN("Deactivating cropbox");
@@ -723,20 +724,43 @@ namespace local_perception_server {
         h_projection = _linear_distance * atan(hfov_rad * .5);
         v_projection = _linear_distance * atan(vfov_rad * .5);
 
-        _cropbox_parameters.max_vertex_arr.push_back(_linear_distance+distance_range_);
-        _cropbox_parameters.max_vertex_arr.push_back(h_projection);
-        _cropbox_parameters.max_vertex_arr.push_back(v_projection);
+        if(cropbox_frame_id_norm_ == CAMERA_FRAME_NORM_TYPE::ROS)
+        {
+            _cropbox_parameters.max_vertex_arr.push_back(_linear_distance+distance_range_);
+            _cropbox_parameters.max_vertex_arr.push_back(h_projection);
+            _cropbox_parameters.max_vertex_arr.push_back(v_projection);
 
-        _cropbox_parameters.min_vertex_arr.push_back(_linear_distance-distance_range_);
-        _cropbox_parameters.min_vertex_arr.push_back(-h_projection);
-        _cropbox_parameters.min_vertex_arr.push_back(-v_projection);
+            _cropbox_parameters.min_vertex_arr.push_back(_linear_distance-distance_range_);
+            _cropbox_parameters.min_vertex_arr.push_back(-h_projection);
+            _cropbox_parameters.min_vertex_arr.push_back(-v_projection);
+        }
+
+        else if (cropbox_frame_id_norm_ == CAMERA_FRAME_NORM_TYPE::OPTICAL)
+        {
+
+            _cropbox_parameters.max_vertex_arr.push_back(h_projection);
+            _cropbox_parameters.max_vertex_arr.push_back(v_projection);
+            _cropbox_parameters.max_vertex_arr.push_back(_linear_distance+distance_range_);
+
+            _cropbox_parameters.min_vertex_arr.push_back(-h_projection);
+            _cropbox_parameters.min_vertex_arr.push_back(-v_projection);
+            _cropbox_parameters.min_vertex_arr.push_back(_linear_distance-distance_range_);
+
+        }
 
         ROS_DEBUG_STREAM("Cropbox maximum parameters defined: [" << _cropbox_parameters.max_vertex_arr.at(0) <<" ," << _cropbox_parameters.max_vertex_arr.at(1) <<" ," << _cropbox_parameters.max_vertex_arr.at(2) << "]");
         ROS_DEBUG_STREAM("Cropbox minimum parameters defined: [" << _cropbox_parameters.min_vertex_arr.at(0) <<" ," << _cropbox_parameters.min_vertex_arr.at(1) <<" ," << _cropbox_parameters.min_vertex_arr.at(2) << "]");
+
         return true;
     }
 
     bool LocalPerception::applyCorrection(const std::vector<float> offset, std::vector<geometry_msgs::TransformStamped> &_poses_arr ){
+
+        if(offset.empty()){
+            ROS_WARN("No offset vector defined. Not correcting. ");
+            return true;
+
+        }
 
         std::vector<geometry_msgs::TransformStamped>::iterator it  = _poses_arr.begin();
 
