@@ -109,9 +109,10 @@ For C# client development in Windows, check [Local Perception Client](https://gi
 
 ### <a name="goal"></a>  4. Goal Parameters
 The run-time parameters are defined in the goal. They are described below:
-     1. **acquisition_distance**: The approximated acquisition euclidean distance (in meters) from camera to the welding region. This parameter will define the point cloud cropbox together with  _cropbox_ parameters in [config.yaml](#config).
-     2. **offset_compensation**: An offset value array to adjust systematic errors. It sums the values in the welding pose results using the camera reference frame.
-     3. **edge_tolerance**: deprecated.  
+
+ 1. **acquisition_distance**: The approximated acquisition euclidean distance (in meters) from camera to the welding region. This parameter will define the point cloud cropbox together with  _cropbox_ parameters in [config.yaml](#config).
+ 2. **offset_compensation**: An offset value array to adjust systematic errors. It sums the values in the welding pose results using the camera reference frame.
+ 3. **edge_tolerance**: deprecated.  
 
 ### <a name="config"></a> 5. Configuration
 
