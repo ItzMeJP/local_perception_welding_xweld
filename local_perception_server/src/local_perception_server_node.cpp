@@ -23,10 +23,6 @@ int main(int argc, char** argv)
     private_node_handle->param("pcl_verbosity_level", pcl_verbosity_level, std::string("DEBUG"));
     local_perception_server::verbosity_levels::setVerbosityLevelPCL(pcl_verbosity_level);
 
-    //ROS_INFO(">> Aperte enter");
-    //getchar();
-    //ROS_INFO(">> Enter pressionado");
-
     local_perception_server::LocalPerception node;
     node.setupParameterServer(node_handle,private_node_handle);
     node.start();

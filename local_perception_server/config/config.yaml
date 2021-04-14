@@ -6,7 +6,7 @@ voxel_grid_filter:
   leaf_sizes: [0.0000, 0.0000, 0.0000]
 cropbox:
   enable: TRUE
-  frame_id_norm: 0 # 0 - Optical Convention  1 - ROS convention
+  frame_id_norm: 1 # 0 - Optical Convention  1 - ROS convention
   horizontal_fov: 86.0 #degree
   vertical_fov: 56.0
   distance_range: 0.025 #toelrance range around the distance defined by the goal

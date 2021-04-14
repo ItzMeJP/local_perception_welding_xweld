@@ -1,4 +1,4 @@
-stopic pub /LocalPerceptionActionServer/goal local_perception_msgs/LocalPerceptionActionGoal "header:
+rostopic pub /LocalPerceptionActionServer/goal local_perception_msgs/LocalPerceptionActionGoal "header:
  seq: 0
  stamp:
    secs: 0
@@ -12,4 +12,4 @@ goal_id:
 goal:
  acquisition_distance: 0.2
  offset_compensation: [0, 0, 0]
- edge_tolerance: 0.0" 
+ edge_tolerance: 0.0"

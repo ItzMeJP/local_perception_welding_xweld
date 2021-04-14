@@ -2,11 +2,14 @@
 <launch>
 
 	<arg name="config_file" default="$(find local_perception_server)/config/config.yaml" />
+	<arg name="enable_rviz" default="false"/>
 
 	<node pkg="local_perception_server" type="local_perception_server_node" name="local_perception_server_node" clear_params="true" output="screen">
 		<rosparam command="load" file="$(arg config_file)" ns="" subst_value="true" />
 	</node>
 
-	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find local_perception_server)/config/rviz.rviz" />
+	<group if="$(arg enable_rviz)">
+		<node name="rviz" pkg="rviz" type="rviz" args="-d $(find local_perception_server)/config/rviz.rviz" />
+	</group>
 
 </launch>
