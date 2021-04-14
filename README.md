@@ -14,7 +14,7 @@
 
 This package implements a local perception pipeline to estimate joint welding points using point clouds. For further detailed methodology description, check this [paper]().
 
-![alt text](local_perception_server/images/pipeline.jpg)
+![alt text](local_perception_server/images/pipeline.png)
 <p align="center">
 Joint welding estimation workflow.
 </p>
@@ -69,7 +69,7 @@ Request action skill by sending the following goal. Check [this](#goal) section 
      edge_tolerance: 0.0"
  ```
 
-![alt text](local_perception_server/images/rviz.jpg)
+![alt text](local_perception_server/images/rviz.png)
 <p align="center">
 Rviz output
 </p>
