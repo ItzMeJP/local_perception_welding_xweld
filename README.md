@@ -101,7 +101,7 @@ Run the main launch:
 
  Run the bridge launch:
  ```
-    roslaunch ros_bridge_server rosbridge_websocket.launch
+    roslaunch local_perception_server ros_bridge_websocket.launch address:=$SERVER_IP_ADDRESS$
  ```
 
 For C# client development in Windows, check [Local Perception Client](https://github.com/ItzMeJP/local_perception_client) API.

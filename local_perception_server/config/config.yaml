@@ -9,7 +9,7 @@ cropbox:
   frame_id_norm: 1 # 0 - Optical Convention  1 - ROS convention
   horizontal_fov: 86.0 #degree
   vertical_fov: 56.0
-  distance_range: 0.025 #toelrance range around the distance defined by the goal
+  distance_range: 0.025 #tolerance range around the distance defined by the goal
 sac_method:
   method_type: 0 # SAC_RANSAC  = 0; SAC_LMEDS   = 1; SAC_MSAC    = 2; SAC_RRANSAC = 3; SAC_RMSAC   = 4; SAC_MLESAC  = 5; SAC_PROSAC  = 6;
   model_type: 11
