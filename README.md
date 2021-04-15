@@ -137,6 +137,11 @@ The configuration file (_config.xml_) is placed in _/config_ directory. The list
 	  distance_range: 0.025 #tolerance range around the distance defined by the goal.
 	```
     **PS**: The camera frame can be defined by the Optical or ROS convention according to the package/manufacturer design.
+	
+![alt text](local_perception_server/images/conventions.png)
+<p align="center">
+Types of frame convention
+</p>
 
 7.  **sac_method**:  SAC configuration to plane estimation:
 	```
