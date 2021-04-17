@@ -1,3 +1,4 @@
 Adjust config file and remove unecessary parameters
 Adjust pub cloud according to the error. Ex. If an intersection line error occur it is still convenient to pub the used input cloud and the segmentated plane input_cloud_timeout_threshold
 Adjust the feedback function. For long period ransac it is convinient
+Adjust filtered output cloud

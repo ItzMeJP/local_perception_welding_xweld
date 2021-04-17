@@ -22,7 +22,7 @@ Joint welding estimation workflow.
 ### <a name="Prerequisites"></a>2. Prerequisites
 1. [ROS](http://wiki.ros.org/ROS/Installation)
 2. [Catkin Tools](https://catkin-tools.readthedocs.io/en/latest/installing.html)
-3. [PCL](https://pointclouds.org/downloads/)
+3. [PCL](https://pointclouds.org/downloads/) (PCL > 1.8.1 | Current Tests = PCL 1.11.0)
 4. [Eigen 3](https://gitlab.com/libeigen/eigen/-/releases/3.3.9)
 5. [Point Cloud IO](https://github.com/carlosmccosta/point_cloud_io)
 

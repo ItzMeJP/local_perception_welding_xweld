@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
 
+  <node pkg="tf" type="static_transform_publisher" name="static_transform_publisher_publisher_link" args="0.3 0 0 0 -1.57 0 map camera_link 100" />
+
+
   <arg name="cloud_0" default="$(find local_perception_server)/data/example_pc.ply" />
 
   <node pkg="point_cloud_io" type="read" name="read_0" output="log">

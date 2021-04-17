@@ -31,7 +31,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: ""
+    SyncSource: PointCloud2
 Toolbars:
   toolButtonStyle: 2
 Visualization Manager:
@@ -91,209 +91,23 @@ Visualization Manager:
         All Enabled: false
         camera_link:
           Value: true
+        map:
+          Value: true
         welding_pose_0:
           Value: true
         welding_pose_1:
           Value: true
-        welding_pose_10:
-          Value: true
-        welding_pose_100:
-          Value: true
-        welding_pose_11:
-          Value: true
-        welding_pose_12:
-          Value: true
-        welding_pose_13:
-          Value: true
-        welding_pose_14:
-          Value: true
-        welding_pose_15:
-          Value: true
-        welding_pose_16:
-          Value: true
-        welding_pose_17:
-          Value: true
-        welding_pose_18:
-          Value: true
-        welding_pose_19:
-          Value: true
         welding_pose_2:
-          Value: true
-        welding_pose_20:
-          Value: true
-        welding_pose_21:
-          Value: true
-        welding_pose_22:
-          Value: true
-        welding_pose_23:
-          Value: true
-        welding_pose_24:
-          Value: true
-        welding_pose_25:
-          Value: true
-        welding_pose_26:
-          Value: true
-        welding_pose_27:
-          Value: true
-        welding_pose_28:
-          Value: true
-        welding_pose_29:
           Value: true
         welding_pose_3:
           Value: true
-        welding_pose_30:
-          Value: true
-        welding_pose_31:
-          Value: true
-        welding_pose_32:
-          Value: true
-        welding_pose_33:
-          Value: true
-        welding_pose_34:
-          Value: true
-        welding_pose_35:
-          Value: true
-        welding_pose_36:
-          Value: true
-        welding_pose_37:
-          Value: true
-        welding_pose_38:
-          Value: true
-        welding_pose_39:
-          Value: true
         welding_pose_4:
-          Value: true
-        welding_pose_40:
-          Value: true
-        welding_pose_41:
-          Value: true
-        welding_pose_42:
-          Value: true
-        welding_pose_43:
-          Value: true
-        welding_pose_44:
-          Value: true
-        welding_pose_45:
-          Value: true
-        welding_pose_46:
-          Value: true
-        welding_pose_47:
-          Value: true
-        welding_pose_48:
-          Value: true
-        welding_pose_49:
           Value: true
         welding_pose_5:
           Value: true
-        welding_pose_50:
-          Value: true
-        welding_pose_51:
-          Value: true
-        welding_pose_52:
-          Value: true
-        welding_pose_53:
-          Value: true
-        welding_pose_54:
-          Value: true
-        welding_pose_55:
-          Value: true
-        welding_pose_56:
-          Value: true
-        welding_pose_57:
-          Value: true
-        welding_pose_58:
-          Value: true
-        welding_pose_59:
-          Value: true
         welding_pose_6:
           Value: true
-        welding_pose_60:
-          Value: true
-        welding_pose_61:
-          Value: true
-        welding_pose_62:
-          Value: true
-        welding_pose_63:
-          Value: true
-        welding_pose_64:
-          Value: true
-        welding_pose_65:
-          Value: true
-        welding_pose_66:
-          Value: true
-        welding_pose_67:
-          Value: true
-        welding_pose_68:
-          Value: true
-        welding_pose_69:
-          Value: true
-        welding_pose_7:
-          Value: true
-        welding_pose_70:
-          Value: true
-        welding_pose_71:
-          Value: true
-        welding_pose_72:
-          Value: true
-        welding_pose_73:
-          Value: true
-        welding_pose_74:
-          Value: true
-        welding_pose_75:
-          Value: true
-        welding_pose_76:
-          Value: true
-        welding_pose_77:
-          Value: true
-        welding_pose_78:
-          Value: true
-        welding_pose_79:
-          Value: true
-        welding_pose_8:
-          Value: true
-        welding_pose_80:
-          Value: true
-        welding_pose_81:
-          Value: true
-        welding_pose_82:
-          Value: true
-        welding_pose_83:
-          Value: true
-        welding_pose_84:
-          Value: true
-        welding_pose_85:
-          Value: true
-        welding_pose_86:
-          Value: true
-        welding_pose_87:
-          Value: true
-        welding_pose_88:
-          Value: true
-        welding_pose_89:
-          Value: true
-        welding_pose_9:
-          Value: true
-        welding_pose_90:
-          Value: true
-        welding_pose_91:
-          Value: true
-        welding_pose_92:
-          Value: true
-        welding_pose_93:
-          Value: true
-        welding_pose_94:
-          Value: true
-        welding_pose_95:
-          Value: true
-        welding_pose_96:
-          Value: true
-        welding_pose_97:
-          Value: true
-        welding_pose_98:
-          Value: true
-        welding_pose_99:
-          Value: true
-        welding_pose_initial:
+        welding_pose_reference:
           Value: true
       Marker Scale: 0.075000003
       Name: TF
@@ -301,211 +115,24 @@ Visualization Manager:
       Show Axes: true
       Show Names: true
       Tree:
-        camera_link:
-          welding_pose_0:
-            {}
-          welding_pose_1:
-            {}
-          welding_pose_10:
-            {}
-          welding_pose_100:
-            {}
-          welding_pose_11:
-            {}
-          welding_pose_12:
-            {}
-          welding_pose_13:
-            {}
-          welding_pose_14:
-            {}
-          welding_pose_15:
-            {}
-          welding_pose_16:
-            {}
-          welding_pose_17:
-            {}
-          welding_pose_18:
-            {}
-          welding_pose_19:
-            {}
-          welding_pose_2:
-            {}
-          welding_pose_20:
-            {}
-          welding_pose_21:
-            {}
-          welding_pose_22:
-            {}
-          welding_pose_23:
-            {}
-          welding_pose_24:
-            {}
-          welding_pose_25:
-            {}
-          welding_pose_26:
-            {}
-          welding_pose_27:
-            {}
-          welding_pose_28:
-            {}
-          welding_pose_29:
-            {}
-          welding_pose_3:
-            {}
-          welding_pose_30:
-            {}
-          welding_pose_31:
-            {}
-          welding_pose_32:
-            {}
-          welding_pose_33:
-            {}
-          welding_pose_34:
-            {}
-          welding_pose_35:
-            {}
-          welding_pose_36:
-            {}
-          welding_pose_37:
-            {}
-          welding_pose_38:
-            {}
-          welding_pose_39:
-            {}
-          welding_pose_4:
-            {}
-          welding_pose_40:
-            {}
-          welding_pose_41:
-            {}
-          welding_pose_42:
-            {}
-          welding_pose_43:
-            {}
-          welding_pose_44:
-            {}
-          welding_pose_45:
-            {}
-          welding_pose_46:
-            {}
-          welding_pose_47:
-            {}
-          welding_pose_48:
-            {}
-          welding_pose_49:
-            {}
-          welding_pose_5:
-            {}
-          welding_pose_50:
-            {}
-          welding_pose_51:
-            {}
-          welding_pose_52:
-            {}
-          welding_pose_53:
-            {}
-          welding_pose_54:
-            {}
-          welding_pose_55:
-            {}
-          welding_pose_56:
-            {}
-          welding_pose_57:
-            {}
-          welding_pose_58:
-            {}
-          welding_pose_59:
-            {}
-          welding_pose_6:
-            {}
-          welding_pose_60:
-            {}
-          welding_pose_61:
-            {}
-          welding_pose_62:
-            {}
-          welding_pose_63:
-            {}
-          welding_pose_64:
-            {}
-          welding_pose_65:
-            {}
-          welding_pose_66:
-            {}
-          welding_pose_67:
-            {}
-          welding_pose_68:
-            {}
-          welding_pose_69:
-            {}
-          welding_pose_7:
-            {}
-          welding_pose_70:
-            {}
-          welding_pose_71:
-            {}
-          welding_pose_72:
-            {}
-          welding_pose_73:
-            {}
-          welding_pose_74:
-            {}
-          welding_pose_75:
-            {}
-          welding_pose_76:
-            {}
-          welding_pose_77:
-            {}
-          welding_pose_78:
-            {}
-          welding_pose_79:
-            {}
-          welding_pose_8:
-            {}
-          welding_pose_80:
-            {}
-          welding_pose_81:
-            {}
-          welding_pose_82:
-            {}
-          welding_pose_83:
-            {}
-          welding_pose_84:
-            {}
-          welding_pose_85:
-            {}
-          welding_pose_86:
-            {}
-          welding_pose_87:
-            {}
-          welding_pose_88:
-            {}
-          welding_pose_89:
-            {}
-          welding_pose_9:
-            {}
-          welding_pose_90:
-            {}
-          welding_pose_91:
-            {}
-          welding_pose_92:
-            {}
-          welding_pose_93:
-            {}
-          welding_pose_94:
-            {}
-          welding_pose_95:
-            {}
-          welding_pose_96:
-            {}
-          welding_pose_97:
-            {}
-          welding_pose_98:
-            {}
-          welding_pose_99:
-            {}
-          welding_pose_initial:
-            {}
+        map:
+          camera_link:
+            welding_pose_0:
+              {}
+            welding_pose_1:
+              {}
+            welding_pose_2:
+              {}
+            welding_pose_3:
+              {}
+            welding_pose_4:
+              {}
+            welding_pose_5:
+              {}
+            welding_pose_6:
+              {}
+            welding_pose_reference:
+              {}
       Update Interval: 0
       Value: true
     - Alpha: 1
@@ -520,7 +147,7 @@ Visualization Manager:
       Color: 255; 255; 255
       Color Transformer: RGB8
       Decay Time: 0
-      Enabled: false
+      Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
       Max Intensity: 4096
@@ -533,11 +160,11 @@ Visualization Manager:
       Size (Pixels): 2
       Size (m): 0.00999999978
       Style: Points
-      Topic: /publisher/camera/depth_registered/points
+      Topic: /camera/depth/color/points
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
-      Value: false
+      Value: true
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
@@ -713,25 +340,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 0.533399165
+      Distance: 0.319876999
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.0619717166
-        Y: 0.010488919
-        Z: -0.0193737969
+        X: 0.137218937
+        Y: 0.0258488506
+        Z: -0.0139705371
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.0500000007
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 0.615201712
+      Pitch: 0.240202218
       Target Frame: charuco
       Value: Orbit (rviz)
-      Yaw: 2.1235857
+      Yaw: 1.98858273
     Saved: ~
 Window Geometry:
   Camera:

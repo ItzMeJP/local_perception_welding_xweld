@@ -13,6 +13,9 @@
 #include <iostream>
 #include <angles/angles.h>
 
+
+//#include <pcl/types.h>
+
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/search/search.h>

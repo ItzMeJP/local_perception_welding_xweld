@@ -240,13 +240,9 @@ namespace local_perception_server {
 
         if(!input_cloud_->is_dense) {
             ROS_WARN_STREAM("The input point cloud is NOT dense. Transforming to dense...");
-            boost::shared_ptr<std::vector<int>> indices(new std::vector<int>);
-            pcl::removeNaNFromPointCloud(*input_cloud_, *indices);
-            pcl::ExtractIndices<pcl::PointXYZRGBNormal> extract;
-            extract.setInputCloud(input_cloud_);
-            extract.setIndices(indices);
-            extract.setNegative(false);
-            extract.filter(*input_cloud_);
+            //boost::shared_ptr<std::vector<int>> indices(new std::vector<int>);
+            std::vector<int> indices;
+            pcl::removeNaNFromPointCloud(*input_cloud_,*input_cloud_, indices);
             input_cloud_->is_dense = true;
             input_cloud_->height = 1;
             input_cloud_->width = input_cloud_->size();
@@ -495,7 +491,8 @@ namespace local_perception_server {
             pRefTf.transform.rotation.w    = 1;
             static_broadcaster_.sendTransform(pRefTf);
 
-            local_perception_server::pcl_complement::pubCloud(pub_input_filtered_, input_cloud_);
+
+            //local_perception_server::pcl_complement::pubCloud(pub_input_filtered_, filtered_input_cloud);
             local_perception_server::pcl_complement::pubCloud(pub_seg_, aux_cloud_ab);
             local_perception_server::pcl_complement::pubCloud(pub_seg_merged_, segmented_cloud_merged);
             local_perception_server::pcl_complement::pubCloud(pub_intersection_line_cloud_, intersection_line_cloud);
@@ -577,6 +574,7 @@ namespace local_perception_server {
         ROS_DEBUG_STREAM("Maximum distance from line:" << max_v);
         ROS_DEBUG_STREAM("Minimum distance from line:" << min_v);
         ROS_DEBUG_STREAM("Intersection region size: " << intersection_region_cloud->width);
+
 
         return true;
     }
