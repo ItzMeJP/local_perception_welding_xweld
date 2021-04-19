@@ -4,9 +4,9 @@
   <version>1.0.1</version>
   <description>The local_perception_server package</description>
 
-  <maintainer email="joao.p.souza@inesctec.pt">joaopedro</maintainer>
+  <maintainer email="joao.p.souza@inesctec.pt">João Pedro Carvalho de Souza</maintainer>
 
-  <license>GPLv3</license>
+  <license>CC BY-NC-ND 4.0</license>
   <url type="website">https://github.com/ItzMeJP/local_perception_welding_xweld</url>
 
   <!--   <doc_depend>doxygen</doc_depend> -->
@@ -18,11 +18,10 @@
   <build_depend>local_perception_msgs</build_depend>
   <build_depend>tf2</build_depend>
   <build_depend>tf2_ros</build_depend>
-  <build_depend>pcl</build_depend> <!-- requires to compile pcl from source using branch master-all-pr from https://github.com/carlosmccosta/pcl -->
 
+  <!--build_depend>pcl</build_depend--> <!-- requires to compile pcl from source using branch master-all-pr from https://github.com/carlosmccosta/pcl -->
+  <!--run_depend>pcl</run_depend--> <!-- requires to compile pcl from source using branch master-all-pr from https://github.com/carlosmccosta/pcl -->
 
-
-  <run_depend>pcl</run_depend> <!-- requires to compile pcl from source using branch master-all-pr from https://github.com/carlosmccosta/pcl -->
   <run_depend>roscpp</run_depend>
   <run_depend>rospy</run_depend>
   <run_depend>std_msgs</run_depend>

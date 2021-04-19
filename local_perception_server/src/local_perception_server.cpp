@@ -85,7 +85,7 @@ namespace local_perception_server {
         this->setupVoxelGridFilterConfigurationFromParameterServer(_node_handle,_private_node_handle);
         this->setupCropboxFilterFilterConfigurationFromParameterServer(_node_handle,_private_node_handle);
         this->setupOutputPoseFilter(_node_handle,_private_node_handle);
-        this->setupLineErrorAssesment(_node_handle,_private_node_handle);
+        //this->setupLineErrorAssesment(_node_handle,_private_node_handle);
 
     }
 
@@ -109,6 +109,7 @@ namespace local_perception_server {
     void LocalPerception::setupVoxelGridFilterConfigurationFromParameterServer (ros::NodeHandlePtr &_node_handle,
                                                                       ros::NodeHandlePtr &_private_node_handle) {
 
+        voxel_leaf_sizes_arr_.clear();
         if (!_private_node_handle->param("voxel_grid_filter/leaf_sizes", voxel_leaf_sizes_arr_,
                                          std::vector<double>())) {
             voxel_leaf_sizes_arr_.push_back(1);
@@ -122,19 +123,11 @@ namespace local_perception_server {
     void LocalPerception::setupOutputPoseFilter (ros::NodeHandlePtr &_node_handle,
                                        ros::NodeHandlePtr &_private_node_handle) {
 
-
-        if (!_private_node_handle->param("pose_filter/offset_threshold", output_offset_threshold_arr_,
-                                         std::vector<double>())) {
-            output_offset_threshold_arr_.push_back(0);
-            output_offset_threshold_arr_.push_back(0);
-            output_offset_threshold_arr_.push_back(0);
-            ROS_WARN_STREAM("Error reading output voxel leaf sizes. Using zero.");
-        }
-
         _private_node_handle->param<int>("pose_filter/welding_interval", welding_interval_, 10);
 
     }
 
+    /*
     void LocalPerception::setupLineErrorAssesment (ros::NodeHandlePtr &_node_handle,
                                          ros::NodeHandlePtr &_private_node_handle) {
 
@@ -144,7 +137,7 @@ namespace local_perception_server {
 
 
     }
-
+    */
     void LocalPerception::setupRansacPlaneSegmentationConfigurationFromParameterServer (ros::NodeHandlePtr &_node_handle,
                                                                               ros::NodeHandlePtr &_private_node_handle) {
 
@@ -157,6 +150,7 @@ namespace local_perception_server {
         _private_node_handle->param<int>("sac_method/tolerance_iterator_threshold", tolerance_iterator_threshold_, 5);
         _private_node_handle->param<double>("sac_method/left_rate_to_all_candidates", left_rate_to_all_candidates_,
                                             0.1);
+        _private_node_handle->param<int>("sac_method/max_number_of_planes", max_number_of_planes_, 2);
         _private_node_handle->param<double>("sac_method/inliers_threshold_weight", inliers_threshold_weight_, .25);
         _private_node_handle->param<std::string>("ransac_plane/axis", axis_, "z");
         _private_node_handle->param<int>("sac_method/segmented_index", segmented_index_, 0);
@@ -177,8 +171,8 @@ namespace local_perception_server {
         _private_node_handle->param<double>("input_cloud_timeout_threshold",
                                             input_cloud_timeout_threshold_, 5.0);
 
-        _private_node_handle->param<int>("plane_intersection/index_cloud_plane_a", index_cloud_plane_a_, 1);
-        _private_node_handle->param<int>("plane_intersection/index_cloud_plane_b", index_cloud_plane_b_, 0);
+        _private_node_handle->param<int>("plane_intersection/index_cloud_plane_a", index_cloud_plane_a_, 0);
+        _private_node_handle->param<int>("plane_intersection/index_cloud_plane_b", index_cloud_plane_b_, 1);
 
         _private_node_handle->param<std::string>("input_cloud_topic", input_cloud_topic_,
                                                  "/camera/depth_registered/points");
@@ -313,7 +307,8 @@ namespace local_perception_server {
             return false;
         }
 
-        while (ros::ok() && (_input_cloud->points.size() > left_rate_to_all_candidates_ * nr_points)) {
+        while (ros::ok() && (_input_cloud->points.size() > left_rate_to_all_candidates_ * nr_points) ||
+               ros::ok() && seg_cloud_num<max_number_of_planes_-1) {
 
             ROS_INFO_STREAM("Running SAC Method #" << sac_type_ << " iteration #" << seg_cloud_num);
 
@@ -439,9 +434,12 @@ namespace local_perception_server {
             return false;
         }
 
+        local_perception_server::pcl_complement::pubCloud(pub_input_filtered_, input_cloud_);
+
         if(!this->planeSegmentation(input_cloud_, segmented_cloud_merged, arr_cloud, coefs_output_arr))
             return false;
 
+        local_perception_server::pcl_complement::pubCloud(pub_seg_merged_, segmented_cloud_merged);
         ROS_INFO_STREAM(" # " << arr_cloud.size() << " planes had been found.");
 
         if(arr_cloud.size()<2){
@@ -457,14 +455,14 @@ namespace local_perception_server {
 
         *aux_cloud_ab              = *aux_cloud_a + *aux_cloud_b;
 
+        local_perception_server::pcl_complement::pubCloud(pub_seg_, aux_cloud_ab);
+
         if(!this->generateIntersectionLine(coefs_output_arr.at(index_cloud_plane_a_),coefs_output_arr.at(index_cloud_plane_b_), intersection_line_cloud,line)
                                        || !this->calculateIntersectionRegion(aux_cloud_ab, line, intersection_region_cloud)
                                        || !this->projectPointCloudToLine(intersection_region_cloud, line, projected_point_arr)
                                        || !this->generateWeldingPoses (projected_point_arr, line, intersection_region_cloud->header.frame_id, poses_arr)
                                        || !this->applyCorrection(_goal->offset_compensation, poses_arr) )
             return false;
-
-
 
         local_perception_msgs::PointArr welding_pose;
         welding_pose.welding_line_index = 0;
@@ -482,19 +480,15 @@ namespace local_perception_server {
             pRefTf.header.frame_id         = intersection_region_cloud->header.frame_id;
             pRefTf.header.stamp            = ros::Time::now();
             pRefTf.child_frame_id          = "welding_pose_reference";
-            pRefTf.transform.translation.x = line.reference_point[0] + output_offset_threshold_arr_.at(0);
-            pRefTf.transform.translation.y = line.reference_point[1] + output_offset_threshold_arr_.at(1);
-            pRefTf.transform.translation.z = line.reference_point[2] + output_offset_threshold_arr_.at(2);
+            pRefTf.transform.translation.x = line.reference_point[0] ;
+            pRefTf.transform.translation.y = line.reference_point[1] ;
+            pRefTf.transform.translation.z = line.reference_point[2];
             pRefTf.transform.rotation.x    = 0;
             pRefTf.transform.rotation.y    = 0;
             pRefTf.transform.rotation.z    = 0;
             pRefTf.transform.rotation.w    = 1;
             static_broadcaster_.sendTransform(pRefTf);
 
-
-            //local_perception_server::pcl_complement::pubCloud(pub_input_filtered_, filtered_input_cloud);
-            local_perception_server::pcl_complement::pubCloud(pub_seg_, aux_cloud_ab);
-            local_perception_server::pcl_complement::pubCloud(pub_seg_merged_, segmented_cloud_merged);
             local_perception_server::pcl_complement::pubCloud(pub_intersection_line_cloud_, intersection_line_cloud);
             local_perception_server::pcl_complement::pubCloud(pub_intersection_region_cloud_,
                                                               intersection_region_cloud);
@@ -646,16 +640,13 @@ namespace local_perception_server {
             pose_to_weld.child_frame_id = "welding_pose_" + std::to_string(it);
 
             pose_to_weld.transform.translation.x =
-                    initWeldingPose[0] + it * welding_length / welding_interval_ * _line.direction_vector[0] +
-                    output_offset_threshold_arr_.at(0);
+                    initWeldingPose[0] + it * welding_length / welding_interval_ * _line.direction_vector[0];
 
             pose_to_weld.transform.translation.y =
-                    initWeldingPose[1] + it * welding_length / welding_interval_ * _line.direction_vector[1] +
-                    output_offset_threshold_arr_.at(1);
+                    initWeldingPose[1] + it * welding_length / welding_interval_ * _line.direction_vector[1];
 
             pose_to_weld.transform.translation.z =
-                    initWeldingPose[2] + it * welding_length / welding_interval_ * _line.direction_vector[2] +
-                    output_offset_threshold_arr_.at(2);
+                    initWeldingPose[2] + it * welding_length / welding_interval_ * _line.direction_vector[2];
 
             pose_to_weld.transform.rotation.w = 1.0; //TODO: set custom orientation.
 

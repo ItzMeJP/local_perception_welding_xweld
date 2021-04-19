@@ -17,12 +17,9 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 ## System dependencies are found with CMake's conventions
-# find_package(Boost REQUIRED COMPONENTS system)
-#find_package(OpenCV) # To image operations
-find_package(PCL REQUIRED) #PCL fork in chain
+find_package(PCL REQUIRED) #PCL from system or from ros_ws/ros_ws_workchain
 #find_package(PCL 1.8 EXACT REQUIRED PATHS /usr/local/share/pcl-1.8)
 #find_package(PCL 1.7.2 EXACT REQUIRED PATHS /usr/lib/x86_64-linux-gnu/cmake/pcl)
-#find_package(PCL 1.11.1 EXACT REQUIRED PATHS /home/joaopedro/ros_ws/catkin_ws_pcl/src/pcl/common/pcl)
 find_package(Eigen3 REQUIRED) # To matrix operations
 
 ## Headers
@@ -79,4 +76,3 @@ target_link_libraries(${PROJECT_NAME}_node
                       #${OpenCV_LIBRARIES}
                       ${PCL_LIBRARIES}
                       ${PROJECT_NAME})
-

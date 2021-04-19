@@ -13,3 +13,6 @@ goal:
  acquisition_distance: 0.2
  offset_compensation: [0, 0, 0]
  edge_tolerance: 0.0"
+
+
+rostopic echo /LocalPerceptionActionServer/result

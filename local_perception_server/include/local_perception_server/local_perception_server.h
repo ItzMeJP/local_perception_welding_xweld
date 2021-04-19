@@ -103,8 +103,8 @@ namespace local_perception_server {
 
         void setupCropboxFilterFilterConfigurationFromParameterServer(ros::NodeHandlePtr &_node_handle, ros::NodeHandlePtr &_private_node_handle);
 
-        void setupLineErrorAssesment(ros::NodeHandlePtr &_node_handle,
-                                     ros::NodeHandlePtr &_private_node_handle);
+        //void setupLineErrorAssesment(ros::NodeHandlePtr &_node_handle,
+        //                             ros::NodeHandlePtr &_private_node_handle);
 
         void setupOutputPoseFilter(ros::NodeHandlePtr &_node_handle,
                                    ros::NodeHandlePtr &_private_node_handle);
@@ -145,7 +145,8 @@ namespace local_perception_server {
             sac_type_,
             model_type_,
             welding_interval_,
-            cropbox_frame_id_norm_;
+            cropbox_frame_id_norm_,
+            max_number_of_planes_;
 
         bool cropbox_activation_;
 
@@ -166,8 +167,7 @@ namespace local_perception_server {
                     gt_line_axis_,
                     aborted_msg_;
 
-        std::vector<double> voxel_leaf_sizes_arr_,
-                            output_offset_threshold_arr_;
+        std::vector<double> voxel_leaf_sizes_arr_;
 
 
         ros::NodeHandlePtr node_handle_,

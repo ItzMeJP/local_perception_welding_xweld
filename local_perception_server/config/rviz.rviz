@@ -7,10 +7,6 @@ Panels:
         - /Global Options1
         - /Status1
         - /TF1/Frames1
-        - /PointCloud21
-        - /PointCloud23
-        - /PointCloud24
-        - /PointCloud26
       Splitter Ratio: 0.5
     Tree Height: 759
   - Class: rviz/Selection
@@ -31,7 +27,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: PointCloud2
+    SyncSource: InputCloud
 Toolbars:
   toolButtonStyle: 2
 Visualization Manager:
@@ -80,7 +76,9 @@ Visualization Manager:
       Visibility:
         Grid: true
         Image: true
+        InputCloudFiltered: true
         PointCloud2: true
+        SegmentedABClouds: true
         TF: true
         Value: true
       Zoom Factor: 1
@@ -93,22 +91,6 @@ Visualization Manager:
           Value: true
         map:
           Value: true
-        welding_pose_0:
-          Value: true
-        welding_pose_1:
-          Value: true
-        welding_pose_2:
-          Value: true
-        welding_pose_3:
-          Value: true
-        welding_pose_4:
-          Value: true
-        welding_pose_5:
-          Value: true
-        welding_pose_6:
-          Value: true
-        welding_pose_reference:
-          Value: true
       Marker Scale: 0.075000003
       Name: TF
       Show Arrows: false
@@ -117,22 +99,7 @@ Visualization Manager:
       Tree:
         map:
           camera_link:
-            welding_pose_0:
-              {}
-            welding_pose_1:
-              {}
-            welding_pose_2:
-              {}
-            welding_pose_3:
-              {}
-            welding_pose_4:
-              {}
-            welding_pose_5:
-              {}
-            welding_pose_6:
-              {}
-            welding_pose_reference:
-              {}
+            {}
       Update Interval: 0
       Value: true
     - Alpha: 1
@@ -153,7 +120,7 @@ Visualization Manager:
       Max Intensity: 4096
       Min Color: 0; 0; 0
       Min Intensity: 0
-      Name: PointCloud2
+      Name: InputCloud
       Position Transformer: XYZ
       Queue Size: 1
       Selectable: true
@@ -174,6 +141,36 @@ Visualization Manager:
       Axis: Z
       Channel Name: intensity
       Class: rviz/PointCloud2
+      Color: 255; 255; 255
+      Color Transformer: RGB8
+      Decay Time: 0
+      Enabled: false
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Max Intensity: 4096
+      Min Color: 0; 0; 0
+      Min Intensity: 0
+      Name: InputCloudFiltered
+      Position Transformer: XYZ
+      Queue Size: 10
+      Selectable: true
+      Size (Pixels): 3
+      Size (m): 0.00999999978
+      Style: Points
+      Topic: /cloud_filtered
+      Unreliable: false
+      Use Fixed Frame: true
+      Use rainbow: true
+      Value: false
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz/PointCloud2
       Color: 170; 0; 0
       Color Transformer: RGB8
       Decay Time: 0
@@ -183,14 +180,14 @@ Visualization Manager:
       Max Intensity: 4096
       Min Color: 0; 0; 0
       Min Intensity: 0
-      Name: PointCloud2
+      Name: SegmentedClouds
       Position Transformer: XYZ
       Queue Size: 10
       Selectable: true
       Size (Pixels): 2
       Size (m): 0.100000001
       Style: Points
-      Topic: /cloud_seg_reference
+      Topic: /cloud_seg_merged
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
@@ -213,7 +210,7 @@ Visualization Manager:
       Max Intensity: 4096
       Min Color: 0; 0; 0
       Min Intensity: 0
-      Name: PointCloud2
+      Name: OutputEstimatedRegion
       Position Transformer: XYZ
       Queue Size: 10
       Selectable: true
@@ -234,8 +231,8 @@ Visualization Manager:
       Axis: Z
       Channel Name: intensity
       Class: rviz/PointCloud2
-      Color: 255; 85; 127
-      Color Transformer: FlatColor
+      Color: 255; 255; 255
+      Color Transformer: RGB8
       Decay Time: 0
       Enabled: true
       Invert Rainbow: false
@@ -243,7 +240,37 @@ Visualization Manager:
       Max Intensity: 4096
       Min Color: 0; 0; 0
       Min Intensity: 0
-      Name: PointCloud2
+      Name: SegmentedABClouds
+      Position Transformer: XYZ
+      Queue Size: 10
+      Selectable: true
+      Size (Pixels): 3
+      Size (m): 0.00100000005
+      Style: Flat Squares
+      Topic: /cloud_seg_reference
+      Unreliable: false
+      Use Fixed Frame: true
+      Use rainbow: true
+      Value: true
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz/PointCloud2
+      Color: 255; 85; 127
+      Color Transformer: FlatColor
+      Decay Time: 0
+      Enabled: false
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Max Intensity: 4096
+      Min Color: 0; 0; 0
+      Min Intensity: 0
+      Name: GeneratedRobotPoses
       Position Transformer: XYZ
       Queue Size: 10
       Selectable: true
@@ -254,67 +281,7 @@ Visualization Manager:
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
-      Value: true
-    - Alpha: 1
-      Autocompute Intensity Bounds: true
-      Autocompute Value Bounds:
-        Max Value: 10
-        Min Value: -10
-        Value: true
-      Axis: Z
-      Channel Name: intensity
-      Class: rviz/PointCloud2
-      Color: 255; 255; 255
-      Color Transformer: RGB8
-      Decay Time: 0
-      Enabled: true
-      Invert Rainbow: false
-      Max Color: 255; 255; 255
-      Max Intensity: 4096
-      Min Color: 0; 0; 0
-      Min Intensity: 0
-      Name: PointCloud2
-      Position Transformer: XYZ
-      Queue Size: 10
-      Selectable: true
-      Size (Pixels): 3
-      Size (m): 0.00100000005
-      Style: Flat Squares
-      Topic: /output_gt_line_cloud_cloud_
-      Unreliable: false
-      Use Fixed Frame: true
-      Use rainbow: true
-      Value: true
-    - Alpha: 1
-      Autocompute Intensity Bounds: true
-      Autocompute Value Bounds:
-        Max Value: 10
-        Min Value: -10
-        Value: true
-      Axis: Z
-      Channel Name: intensity
-      Class: rviz/PointCloud2
-      Color: 255; 255; 255
-      Color Transformer: RGB8
-      Decay Time: 0
-      Enabled: true
-      Invert Rainbow: false
-      Max Color: 255; 255; 255
-      Max Intensity: 4096
-      Min Color: 0; 0; 0
-      Min Intensity: 0
-      Name: PointCloud2
-      Position Transformer: XYZ
-      Queue Size: 10
-      Selectable: true
-      Size (Pixels): 3
-      Size (m): 0.00999999978
-      Style: Points
-      Topic: /cloud_filtered
-      Unreliable: false
-      Use Fixed Frame: true
-      Use rainbow: true
-      Value: true
+      Value: false
   Enabled: true
   Global Options:
     Background Color: 127; 127; 127
@@ -340,25 +307,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 0.319876999
+      Distance: 0.362513274
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.137218937
-        Y: 0.0258488506
-        Z: -0.0139705371
+        X: 0.119893633
+        Y: 0.0252843592
+        Z: -0.0306622423
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.0500000007
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 0.240202218
+      Pitch: 0.274796396
       Target Frame: charuco
       Value: Orbit (rviz)
-      Yaw: 1.98858273
+      Yaw: 1.89357233
     Saved: ~
 Window Geometry:
   Camera:

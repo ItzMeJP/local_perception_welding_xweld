@@ -103,7 +103,7 @@ namespace local_perception_server {
             } else {
                 pcl::VoxelGrid<pcl::PointXYZRGBNormal> sor;
                 sor.setInputCloud(_cloud);
-                sor.setLeafSize(_voxel_leaf_sizes_arr.at(0), _voxel_leaf_sizes_arr.at(1), _voxel_leaf_sizes_arr.at(2));
+                sor.setLeafSize((float)_voxel_leaf_sizes_arr.at(0), (float)_voxel_leaf_sizes_arr.at(1), (float)_voxel_leaf_sizes_arr.at(2));
                 sor.filter(*_cloud);
             }
 
