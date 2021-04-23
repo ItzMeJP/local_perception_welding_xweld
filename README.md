@@ -25,7 +25,10 @@ Joint welding estimation workflow.
 </p>
 
 ### <a name="Prerequisites"></a>2. Prerequisites
-1. [ROS](http://wiki.ros.org/ROS/Installation) (Current Testes = ROS Kinect. Ubuntu 16.04)
+
+The system was already tested on Ubuntu 16.04 and 20.04 with gcc-5 and gcc-9, respectively. The ROS version used was Kinect and Noetic (each one defined by a git branch version). The list of dependencies are placed below:
+
+1. [ROS](http://wiki.ros.org/ROS/Installation)
 2. [Catkin Tools](https://catkin-tools.readthedocs.io/en/latest/installing.html)
 3. [PCL](https://pointclouds.org/downloads/) (PCL > 1.8.1 | Current Tests = PCL 1.11.0)
 4. [Eigen 3](https://gitlab.com/libeigen/eigen/-/releases/3.3.9)
