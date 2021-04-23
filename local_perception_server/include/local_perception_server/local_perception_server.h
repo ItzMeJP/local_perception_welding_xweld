@@ -1,4 +1,13 @@
 
+/**\file local_perception_server.h
+ * \brief definition of local perception server in ROS
+ *
+ * @version 2.0.1
+ * @author João Pedro Carvalho de Souza
+ * @email: josouza@fe.up.pt
+ */
+
+
 #include <ros/ros.h>
 
 #include <sensor_msgs/PointCloud2.h>

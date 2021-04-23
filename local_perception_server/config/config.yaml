@@ -3,7 +3,7 @@ pcl_verbosity_level: "ERROR"
 input_cloud_topic: "/camera/depth/color/points" #Input cloud ROS topic
 input_cloud_timeout_threshold: 7.0
 voxel_grid_filter: # Down-sampling the input cloud using voxel grids. Arr = [x,y,z] cube dimensions. Arr = [0,0,0] desactivate the filter
-  leaf_sizes: [0.0005, 0.0005, 0.0005]
+  leaf_sizes: [0.000, 0.000, 0.000]
 cropbox:
   enable: TRUE
   frame_id_norm: 1 # Cropbox reference frame | 0 - Optical Convention  1 - ROS convention

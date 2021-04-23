@@ -1,6 +1,12 @@
-//
-// Created by joaopedro on 06-10-2020.
-//
+
+/**\file local_perception_server.cpp
+ * \brief implementation of local perception server in ROS
+ *
+ * @version 2.0.1
+ * @author João Pedro Carvalho de Souza
+ * @email: josouza@fe.up.pt
+ */
+
 
 #include <local_perception_server/local_perception_server.h>
 
@@ -112,10 +118,10 @@ namespace local_perception_server {
         voxel_leaf_sizes_arr_.clear();
         if (!_private_node_handle->param("voxel_grid_filter/leaf_sizes", voxel_leaf_sizes_arr_,
                                          std::vector<double>())) {
-            voxel_leaf_sizes_arr_.push_back(1);
-            voxel_leaf_sizes_arr_.push_back(1);
-            voxel_leaf_sizes_arr_.push_back(1);
-            ROS_WARN_STREAM("Error reading voxel leaf sizes. Using unit values");
+            voxel_leaf_sizes_arr_.push_back(0);
+            voxel_leaf_sizes_arr_.push_back(0);
+            voxel_leaf_sizes_arr_.push_back(0);
+            ROS_WARN_STREAM("Error reading voxel leaf sizes. Using zero values");
         }
 
     }
