@@ -16,6 +16,7 @@ namespace local_perception_server {
 
         cloud_raw = pcl::PCLPointCloud2::Ptr(new pcl::PCLPointCloud2);
         input_cloud_ = PointCloudPtrLP (new PointCloudLP);
+        input_cloud_current = PointCloudPtrLP (new PointCloudLP);
         tf_buffer_       = std::make_shared<tf2_ros::Buffer>(ros::Duration(600));
         tf_listener_ptr_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
 
@@ -221,20 +222,27 @@ namespace local_perception_server {
 
         ROS_DEBUG_STREAM("Subscribe topic: " << input_cloud_topic_);
 
-        while (ros::ok() && input_cloud_->size() == 0) {
+        unlockCloudCallbackMutex();
+
+        while (ros::ok() && input_cloud_->points.size() == 0) {
 
             if(input_cloud_timeout_counter*refresh_period > input_cloud_timeout_threshold_){
                 ROS_ERROR_STREAM(input_cloud_timeout_threshold_ << " [s] timout exceeded. ");
                 aborted_msg_ += " " + std::to_string(ERROR_LIST::CLOUD_RECEPTION_TIMEOUT);
+                lockCloudCallbackMutex();
                 return false;
             }
 
             ROS_INFO_STREAM("Waiting for input cloud.");
             ros::Duration(refresh_period).sleep();
-            ros::spinOnce();
+            //ros::spinOnce(); // Spin si already running in main node
 
             input_cloud_timeout_counter++;
         }
+
+        lockCloudCallbackMutex();
+        //pcl::copyPointCloud<PointLP>(*input_cloud_current, *input_cloud_);
+        //input_cloud_current->clear();
 
         ROS_INFO_STREAM("Input cloud received.");
 
@@ -395,9 +403,14 @@ namespace local_perception_server {
     }
 
     void LocalPerception::CloudChatterCallback (const boost::shared_ptr<const sensor_msgs::PointCloud2> &input) {
-        //cloud_ros_=*input;
-        pcl_conversions::toPCL(*input, *cloud_raw);
-        pcl::fromPCLPointCloud2(*cloud_raw, *input_cloud_);
+
+        if(!isInputCloudCallbackMutexLocked()){
+            //cloud_ros_=*input;
+            pcl_conversions::toPCL(*input, *cloud_raw);
+            pcl::fromPCLPointCloud2(*cloud_raw, *input_cloud_);
+        }
+
+        //ROS_WARN_STREAM("Mutex is locked? : " << isInputCloudCallbackMutexLocked() );
 
     }
 
@@ -573,7 +586,7 @@ namespace local_perception_server {
         ROS_DEBUG_STREAM("Direction vector: [" << _line.direction_vector.x() << ", "<< _line.direction_vector.y() << ", " << _line.direction_vector.z() << "]" );
         ROS_DEBUG_STREAM("Maximum distance from line:" << max_v);
         ROS_DEBUG_STREAM("Minimum distance from line:" << min_v);
-        ROS_DEBUG_STREAM("Intersection region size: " << intersection_region_cloud->width);
+        ROS_DEBUG_STREAM("Intersection region size: " << intersection_region_cloud->points.size());
 
 
         return true;
@@ -754,7 +767,10 @@ namespace local_perception_server {
         if(offset.empty()){
             ROS_WARN("No offset vector defined. Not correcting. ");
             return true;
-
+        }
+        else if (offset.size() != 3){
+            ROS_WARN("Offset should be a three-dimensional float vector. Not correcting. ");
+            return true;
         }
 
         std::vector<geometry_msgs::TransformStamped>::iterator it  = _poses_arr.begin();
@@ -770,5 +786,19 @@ namespace local_perception_server {
         ROS_DEBUG_STREAM("Offset of [" << offset.at(0) << ", "<< offset.at(1) << ", " << offset.at(2)  << "] applied");
         return true;
 
+    }
+
+    bool LocalPerception::isInputCloudCallbackMutexLocked(){
+        return lock_input_pc_callback_mutex_;
+    }
+
+    void LocalPerception::lockCloudCallbackMutex(){
+
+        lock_input_pc_callback_mutex_ = true;
+    }
+
+    void LocalPerception::unlockCloudCallbackMutex(){
+
+        lock_input_pc_callback_mutex_ = false;
     }
 }

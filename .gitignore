@@ -1,6 +1,9 @@
 #ignore specific subfolders
-/cmake-build-debug
-/.idea
+/local_perception_server/cmake-build-debug
+/local_perception_server/.idea
+
+/local_perception_msgs/cmake-build-debug
+/local_perception_msgs/.idea
 
 # ignore all logs
 *.log

@@ -1,16 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
 
-  <node pkg="tf" type="static_transform_publisher" name="static_transform_publisher_publisher_link" args="0.3 0 0 0 -1.57 0 map camera_link 100" />
+  <arg name="tracer_p1_example" default="false" />
+  <arg name="rs_435_example"    default="false" />
 
 
-  <arg name="cloud_0" default="$(find local_perception_server)/data/example_pc.ply" />
+  <node pkg="tf" type="static_transform_publisher" name="static_transform_publisher_pub_rs_435_example" args="0.2 0 0 0 0 0 camera_link map 100" if="$(arg rs_435_example)"/>
+  <arg name="cloud_0" default="$(find local_perception_server)/data/example_pc_rs_435.ply" if="$(arg rs_435_example)" />
+
+  <node pkg="tf" type="static_transform_publisher" name="static_transform_publisher_pub_tracer_p1_example" args="0.440 0 0 0 0 0 camera_link map 100" if="$(arg tracer_p1_example)" />
+  <arg name="cloud_0" default="$(find local_perception_server)/data/example_pc_tracer_p1.ply" if="$(arg tracer_p1_example)" />
 
   <node pkg="point_cloud_io" type="read" name="read_0" output="log">
     <param name="file_path" value="$(arg cloud_0)" />
     <param name="topic"     value="/camera/depth/color/points"/>
     <param name="frame"     value="camera_link" />
-    <param name="rate"      value="2" />
+    <param name="rate"      value="10" />
   </node>
 
   <include file="$(find local_perception_server)/launch/run.launch">

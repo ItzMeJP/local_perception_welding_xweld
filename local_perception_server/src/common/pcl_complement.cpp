@@ -6,6 +6,7 @@
  */
 
 #include <local_perception_server/common/pcl_complement.h>
+#include <pcl/filters/crop_box.h>
 
 namespace local_perception_server {
     namespace pcl_complement {
@@ -45,7 +46,7 @@ namespace local_perception_server {
 
             return true;
         }
-
+/*
         //this fuction was needded since, the current PCL version has an issue in cropbox.
         bool applyCropbox (pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr& _inputCloud, Eigen::Vector4f _min_pt,
                                             Eigen::Vector4f _max_pt) {
@@ -86,6 +87,41 @@ namespace local_perception_server {
             _inputCloud->clear();
             *_inputCloud = *_outputCloud;
             return true;
+        }
+*/
+
+
+        bool applyCropbox(pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr& _inputCloud, Eigen::Vector4f _min_pt,
+                          Eigen::Vector4f _max_pt){
+
+            if (_inputCloud->points.size() == 0) {
+                ROS_ERROR_STREAM("Empty input cloud in cropbox");
+                return false;
+            }
+            pcl::CropBox<pcl::PointXYZRGBNormal> cropBoxFilter (false);
+            pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr outputCloud(new pcl::PointCloud<pcl::PointXYZRGBNormal>);
+
+            cropBoxFilter.setInputCloud (_inputCloud);
+
+            //Eigen::Vector4f min_pt (0.4f ,0.0f ,-0.299598f, 1.0f);
+            //Eigen::Vector4f max_pt (.5f ,0.299598f ,0.299598f, 1.0f);
+
+            // Cropbox slighlty bigger then bounding box of points
+            cropBoxFilter.setMin (_min_pt);
+            cropBoxFilter.setMax (_max_pt);
+
+            // Cloud
+            //pcl::PointCloud<pcl::PointXYZRGBNormal> cloud_out;
+            cropBoxFilter.filter(*outputCloud);
+
+            outputCloud->height          = 1;
+            outputCloud->header.frame_id = _inputCloud->header.frame_id;
+            outputCloud->header.stamp    = _inputCloud->header.stamp;
+
+            _inputCloud->clear();
+            *_inputCloud = *outputCloud;
+            return true;
+
         }
 
         bool applyVoxelGrid (pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr &_cloud,

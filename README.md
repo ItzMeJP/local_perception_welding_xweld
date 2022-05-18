@@ -17,7 +17,7 @@
 
 ### <a name="Description"></a>1. Description
 
-This package implements a local perception pipeline to estimate joint welding points using point clouds. For further detailed methodology description, check this [paper]().
+This package implements a local perception pipeline to estimate joint welding points using point clouds. For further detailed methodology description, check this [paper](https://ieeexplore.ieee.org/document/9429788).
 
 ![alt text](local_perception_server/images/pipeline.png)
 <p align="center">
@@ -33,6 +33,7 @@ The system was already tested on Ubuntu 16.04 and 20.04 with gcc-5 and gcc-9, re
 3. [PCL](https://pointclouds.org/downloads/) (PCL > 1.8.1 | Current Tests = PCL 1.11.0)
 4. [Eigen 3](https://gitlab.com/libeigen/eigen/-/releases/3.3.9)
 5. [Point Cloud IO](https://github.com/carlosmccosta/point_cloud_io)
+6. [Revopoint Cameras](https://github.com/ItzMeJP/revopoint_cameras_pkg)
 
 ### <a name="Installation"></a>3. Installation
 
@@ -56,7 +57,7 @@ The system was already tested on Ubuntu 16.04 and 20.04 with gcc-5 and gcc-9, re
 
 Run the following launch:
  ```
-    roslaunch local_perception_server test.launch
+ roslaunch local_perception_server test.launch rs_435_example:=true
  ```
 Request action skill by sending the following goal. Check [this](#goal) section to further goal detail.
  ```

@@ -30,5 +30,7 @@
   <run_depend>tf2</run_depend>
   <run_depend>tf2_ros</run_depend>
   <run_depend>point_cloud_io</run_depend>
+  <run_depend>revopoint_cameras</run_depend>
+
 
 </package>

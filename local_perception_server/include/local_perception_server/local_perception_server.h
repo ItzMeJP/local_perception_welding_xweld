@@ -36,6 +36,7 @@
 #include <pcl/filters/extract_indices.h>
 #include <pcl/common/colors.h>
 #include <pcl_conversions/pcl_conversions.h>
+#include <pcl/filters/crop_box.h>
 
 
 #include <pcl/common/intersections.h>
@@ -87,8 +88,8 @@ namespace local_perception_server {
         };
 
         enum CAMERA_FRAME_NORM_TYPE{
-            OPTICAL,
-            ROS
+            OPTICAL=0,
+            ROS=1,
         };
 
         LocalPerception();
@@ -157,7 +158,8 @@ namespace local_perception_server {
             cropbox_frame_id_norm_,
             max_number_of_planes_;
 
-        bool cropbox_activation_;
+        bool cropbox_activation_,
+             lock_input_pc_callback_mutex_ = true;
 
 
         std::string axis_,
@@ -183,7 +185,7 @@ namespace local_perception_server {
                            private_node_handle_;
 
         pcl::PCLPointCloud2::Ptr cloud_raw;
-        PointCloudPtrLP input_cloud_;
+        PointCloudPtrLP input_cloud_, input_cloud_current;
 
         ros::Subscriber input_cloud_sub_;
 
@@ -233,6 +235,13 @@ namespace local_perception_server {
         bool setupCropboxParameters(double _linear_distance,BoxParametrization &_cropbox_parameters);
 
         bool applyCorrection(const std::vector<float> offset, std::vector<geometry_msgs::TransformStamped> &_poses_arr );
+
+        bool isInputCloudCallbackMutexLocked();
+
+        void lockCloudCallbackMutex();
+
+        void unlockCloudCallbackMutex();
+
 
     };
 }
