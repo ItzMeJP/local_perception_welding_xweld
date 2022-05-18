@@ -16,7 +16,8 @@ namespace local_perception_server {
 
         cloud_raw = pcl::PCLPointCloud2::Ptr(new pcl::PCLPointCloud2);
         input_cloud_ = PointCloudPtrLP (new PointCloudLP);
-        input_cloud_current = PointCloudPtrLP (new PointCloudLP);
+        input_cloud_bkup_ = PointCloudPtrLP (new PointCloudLP);
+        post_cropbox_input_cloud_bkup_ = PointCloudPtrLP (new PointCloudLP);
         tf_buffer_       = std::make_shared<tf2_ros::Buffer>(ros::Duration(600));
         tf_listener_ptr_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
 
@@ -93,6 +94,8 @@ namespace local_perception_server {
         this->setupCropboxFilterFilterConfigurationFromParameterServer(_node_handle,_private_node_handle);
         this->setupOutputPoseFilter(_node_handle,_private_node_handle);
         //this->setupLineErrorAssesment(_node_handle,_private_node_handle);
+        this->setupWeldingQualityConfigurationFromParameterServer(_node_handle,_private_node_handle);
+
 
     }
 
@@ -194,6 +197,9 @@ namespace local_perception_server {
         _private_node_handle->param<std::string>("output_region_cloud", output_region_cloud_, "/output_region_cloud");
         _private_node_handle->param<std::string>("output_region_centroid_cloud", output_region_centroid_cloud_,
                                                  "/output_centroid_cloud");
+        _private_node_handle->param<std::string>("output_welding_deposit_region_cloud", output_welding_deposit_region_cloud_,
+                                                 "/welding_deposit_region_cloud");
+
 
 
 
@@ -212,6 +218,26 @@ namespace local_perception_server {
         pub_intersection_centroid_cloud_ = private_node_handle_->advertise<pcl::PCLPointCloud2>(
                 output_region_centroid_cloud_, 100, true);
 
+        pub_welding_deposit_region_cloud_ = private_node_handle_->advertise<pcl::PCLPointCloud2>(
+                output_welding_deposit_region_cloud_, 100, true);
+
+
+    }
+
+    void LocalPerception::setupWeldingQualityConfigurationFromParameterServer (ros::NodeHandlePtr &_node_handle,
+                                                                                    ros::NodeHandlePtr &_private_node_handle) {
+
+        _private_node_handle->param<bool>("quality/enable", quality_enable_, false);
+        _private_node_handle->param<double>("quality/threshold", quality_threshold_, 0.0);  // which convention is used to define the point cloud parent frame
+
+        if (!quality_enable_) {
+            ROS_WARN("Deactivating quality analyses.");
+            return;
+        }
+
+        _private_node_handle->param<double>("cropbox/horizontal_fov", hfov_, 80.0);
+        _private_node_handle->param<double>("cropbox/vertical_fov", vfov_, 60.0);
+        _private_node_handle->param<double>("cropbox/distance_range", distance_range_, 0.025);
 
     }
 
@@ -241,8 +267,6 @@ namespace local_perception_server {
         }
 
         lockCloudCallbackMutex();
-        //pcl::copyPointCloud<PointLP>(*input_cloud_current, *input_cloud_);
-        //input_cloud_current->clear();
 
         ROS_INFO_STREAM("Input cloud received.");
 
@@ -430,6 +454,9 @@ namespace local_perception_server {
         PointCloudPtrLP     intersection_line_cloud     (new PointCloudLP);
         PointCloudPtrLP     intersection_region_cloud   (new PointCloudLP);
 
+        PointCloudPtrLP     welding_deposit_region      (new PointCloudLP);
+
+
         std::vector<PointCloudLP> arr_cloud;
         std::vector<pcl::ModelCoefficients> coefs_output_arr;
         InfiniteLineDescriptors line;
@@ -439,6 +466,9 @@ namespace local_perception_server {
         if(!inputPointCloudVerification())
             return false;
 
+        input_cloud_bkup_->clear();
+        pcl::copyPointCloud<PointLP>(*input_cloud_, *input_cloud_bkup_);
+
         if (cropbox_activation_) {
             BoxParametrization cropbox_parameters;
             if (!setupCropboxParameters(_goal->acquisition_distance, cropbox_parameters) ||
@@ -447,6 +477,9 @@ namespace local_perception_server {
                 return false;
             }
         }
+
+        post_cropbox_input_cloud_bkup_->clear();
+        pcl::copyPointCloud<PointLP>(*input_cloud_, *post_cropbox_input_cloud_bkup_);
 
         if(!local_perception_server::pcl_complement::applyVoxelGrid(input_cloud_, voxel_leaf_sizes_arr_)){
             aborted_msg_ += " " + std::to_string(ERROR_LIST::INPUT_CLOUD_VOXELGRID_ERROR);
@@ -477,7 +510,7 @@ namespace local_perception_server {
         local_perception_server::pcl_complement::pubCloud(pub_seg_, aux_cloud_ab);
 
         if(!this->generateIntersectionLine(coefs_output_arr.at(index_cloud_plane_a_),coefs_output_arr.at(index_cloud_plane_b_), intersection_line_cloud,line)
-                                       || !this->calculateIntersectionRegion(aux_cloud_ab, line, intersection_region_cloud)
+                                       || !this->calculateIntersectionRegion(aux_cloud_ab, line, distance_to_line_threshold_, intersection_region_cloud)
                                        || !this->projectPointCloudToLine(intersection_region_cloud, line, projected_point_arr)
                                        || !this->generateWeldingPoses (projected_point_arr, line, intersection_region_cloud->header.frame_id, poses_arr)
                                        || !this->applyCorrection(_goal->offset_compensation, poses_arr) )
@@ -488,6 +521,31 @@ namespace local_perception_server {
         welding_pose.welding_point_stamped = poses_arr;
 
         result_.welding_list.welding.push_back(welding_pose);
+
+        if(quality_enable_)
+        {
+
+             PointLP quality_cropbox_min, quality_cropbox_max;
+            pcl::getMinMax3D(*aux_cloud_ab, quality_cropbox_min, quality_cropbox_max);
+
+
+            quality_cropbox_min.x = quality_cropbox_min.x + quality_threshold_;
+            quality_cropbox_min.y = quality_cropbox_min.y + quality_threshold_;
+            quality_cropbox_min.z = quality_cropbox_min.z + quality_threshold_;
+
+            copyPointCloud(*post_cropbox_input_cloud_bkup_, *welding_deposit_region);
+
+            pcl_complement::applyCropbox(welding_deposit_region, quality_cropbox_min, quality_cropbox_max);
+
+            //*welding_deposit_region = *welding_deposit_region - *aux_cloud_ab;
+
+            //local_perception_server::pcl_complement::pubCloud(pub_welding_deposit_region_cloud_, welding_deposit_region);
+
+
+            this->calculateIntersectionRegion(welding_deposit_region, line, quality_threshold_, welding_deposit_region);
+            local_perception_server::pcl_complement::pubCloud(pub_welding_deposit_region_cloud_, welding_deposit_region);
+
+        }
 
         if(verbosity_levels::isROSDebug()) {
 
@@ -511,10 +569,18 @@ namespace local_perception_server {
             local_perception_server::pcl_complement::pubCloud(pub_intersection_line_cloud_, intersection_line_cloud);
             local_perception_server::pcl_complement::pubCloud(pub_intersection_region_cloud_,
                                                               intersection_region_cloud);
+
+
         }
 
         return true;
 
+    }
+
+    bool LocalPerception::runQualityEvaluation(){
+
+        //TODO
+        return true;
     }
 
     bool LocalPerception::generateIntersectionLine (pcl::ModelCoefficients coefs_plane_a,
@@ -552,7 +618,7 @@ namespace local_perception_server {
         return true;
     }
 
-    bool LocalPerception::calculateIntersectionRegion(PointCloudPtrLP _input_cloud, InfiniteLineDescriptors _line , PointCloudPtrLP &intersection_region_cloud ){
+    bool LocalPerception::calculateIntersectionRegion(PointCloudPtrLP _input_cloud, InfiniteLineDescriptors _line, double _dist_threshold, PointCloudPtrLP &intersection_region_cloud ){
 
         intersection_region_cloud->clear();
 
@@ -574,7 +640,7 @@ namespace local_perception_server {
             if (dist > max_v)
                 max_v = dist;
 
-            if (dist < distance_to_line_threshold_)
+            if (dist < _dist_threshold)
                 intersection_region_cloud->push_back(_input_cloud->points.at(it));
         }
 

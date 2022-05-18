@@ -21,7 +21,7 @@ sac_method: # Generate an array of segmented planes. The size is defined by sac_
   inliers_threshold_weight: 0.01
   max_iterations : 100000
   eps_angle: 5
-  left_rate_to_all_candidates: 0.25 #Find planes until this rate left in overall cloud
+  left_rate_to_all_candidates: 0.5 #Find planes until this rate left in overall cloud
   max_number_of_planes: 2 #max number of found planes
 plane_intersection: #define the intersection between plane A and B. It is a ideal line.
   #index_cloud_plane_a: 0 # Define plane A since the ransac estimator generate an array of planes
@@ -29,6 +29,12 @@ plane_intersection: #define the intersection between plane A and B. It is a idea
   distance_to_line_threshold: 0.005 # Threshold that defines and select real points that are included into the ideal line region.
 pose_filter:
   welding_interval: 6 #how many points will be generated
+quality:
+  enable: TRUE
+  threshold: 0.01 # distance in meters from the ideal line that defines which points constitues the welding deposit
+
+
+
 
 #MODEL TYPES INDEXES
 #    SACMODEL_PLANE                 - 0

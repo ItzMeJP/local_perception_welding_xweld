@@ -33,13 +33,27 @@ namespace local_perception_server {
             return true;
         }
 
-        //this fuction was needded since, the current PCL version has an issue in cropbox.
         bool applyCropbox (pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr &_cloud, std::vector<double> _min_arr,
                                             std::vector<double> _max_arr) {
 
 
             Eigen::Vector4f min(_min_arr.at(0), _min_arr.at(1), _min_arr.at(2), 1.0),
                             max(_max_arr.at(0), _max_arr.at(1), _max_arr.at(2), 1.0);
+
+            if(!applyCropbox(_cloud, min, max))
+                return false;
+
+            return true;
+        }
+
+        //this fuction was needded since, the current PCL version has an issue in cropbox.
+        bool applyCropbox (pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr &_cloud,
+                           pcl::PointXYZRGBNormal _min_point,
+                           pcl::PointXYZRGBNormal _max_point) {
+
+
+            Eigen::Vector4f min(_min_point.x,_min_point.y,_min_point.z, 1.0),
+                            max(_max_point.x,_max_point.y,_max_point.z, 1.0);
 
             if(!applyCropbox(_cloud, min, max))
                 return false;

@@ -36,11 +36,10 @@
 #include <pcl/filters/extract_indices.h>
 #include <pcl/common/colors.h>
 #include <pcl_conversions/pcl_conversions.h>
-#include <pcl/filters/crop_box.h>
-
-
 #include <pcl/common/intersections.h>
 #include <pcl/filters/project_inliers.h>
+#include <pcl/filters/crop_box.h>
+#include <pcl/common/common.h>
 
 //#include <pcl/filters/crop_box.h>
 
@@ -88,8 +87,8 @@ namespace local_perception_server {
         };
 
         enum CAMERA_FRAME_NORM_TYPE{
-            OPTICAL=0,
-            ROS=1,
+            OPTICAL,
+            ROS
         };
 
         LocalPerception();
@@ -119,11 +118,14 @@ namespace local_perception_server {
         void setupOutputPoseFilter(ros::NodeHandlePtr &_node_handle,
                                    ros::NodeHandlePtr &_private_node_handle);
 
+        void setupWeldingQualityConfigurationFromParameterServer (ros::NodeHandlePtr &_node_handle, ros::NodeHandlePtr &_private_node_handle);
+
         void setupPlaneIntersectionConfigurationFromParameterServer(ros::NodeHandlePtr &_node_handle,
                                                                     ros::NodeHandlePtr &_private_node_handle);
 
         bool run(local_perception_msgs::LocalPerceptionGoalConstPtr);
 
+        bool runQualityEvaluation();
 
     protected:
 
@@ -144,7 +146,8 @@ namespace local_perception_server {
                input_cloud_timeout_threshold_,
                hfov_,
                vfov_,
-               distance_range_;
+               distance_range_,
+               quality_threshold_;
 
         int max_iterations_,
             normal_k_search_,
@@ -159,7 +162,8 @@ namespace local_perception_server {
             max_number_of_planes_;
 
         bool cropbox_activation_,
-             lock_input_pc_callback_mutex_ = true;
+             lock_input_pc_callback_mutex_ = true,
+             quality_enable_;
 
 
         std::string axis_,
@@ -176,7 +180,8 @@ namespace local_perception_server {
                     output_gt_line_cloud_cloud_,
                     gt_line_frame_id_,
                     gt_line_axis_,
-                    aborted_msg_;
+                    aborted_msg_,
+                    output_welding_deposit_region_cloud_;
 
         std::vector<double> voxel_leaf_sizes_arr_;
 
@@ -185,7 +190,9 @@ namespace local_perception_server {
                            private_node_handle_;
 
         pcl::PCLPointCloud2::Ptr cloud_raw;
-        PointCloudPtrLP input_cloud_, input_cloud_current;
+        PointCloudPtrLP input_cloud_,
+                        input_cloud_bkup_,
+                        post_cropbox_input_cloud_bkup_;
 
         ros::Subscriber input_cloud_sub_;
 
@@ -197,7 +204,8 @@ namespace local_perception_server {
                        pub_intersection_centroid_cloud_,
                        pub_intersection_line_cloud_,
                        pub_robot_poses_cloud_,
-                       pub_gt_line_cloud_;
+                       pub_gt_line_cloud_,
+                       pub_welding_deposit_region_cloud_;
 
         std::shared_ptr<tf2_ros::Buffer>            tf_buffer_;
         std::shared_ptr<tf2_ros::TransformListener> tf_listener_ptr_;
@@ -222,7 +230,7 @@ namespace local_perception_server {
                                        InfiniteLineDescriptors &line);
                                        //Eigen::VectorXf& coefs_line); //first 3 parameters- initial point nearest to zero. last 3 parameters = direction vector
 
-        bool calculateIntersectionRegion(PointCloudPtrLP input_cloud, InfiniteLineDescriptors _line , PointCloudPtrLP &intersection_region_cloud );
+        bool calculateIntersectionRegion(PointCloudPtrLP input_cloud, InfiniteLineDescriptors _line , double _dist_threshold, PointCloudPtrLP &intersection_region_cloud );
 
         bool projectPointCloudToLine(PointCloudPtrLP _input_cloud, InfiniteLineDescriptors _line, std::vector<Eigen::Vector3d> &_projected_point_arr);
 

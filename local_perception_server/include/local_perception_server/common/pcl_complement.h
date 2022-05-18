@@ -23,6 +23,8 @@ namespace local_perception_server {
 
         bool applyCropbox(pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr& _cloud, std::vector<double> _min_arr, std::vector<double> _max_arr);
         bool applyCropbox(pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr& _inputCloud, Eigen::Vector4f _min_pt, Eigen::Vector4f _max_pt);
+        bool applyCropbox (pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr &_cloud, pcl::PointXYZRGBNormal _min_point, pcl::PointXYZRGBNormal _max_point);
+
         bool applyVoxelGrid(pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr& _cloud, std::vector<double> _voxel_leaf_sizes_arr);
         bool getCentroid(pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr _cloud, pcl::PointXYZRGBNormal _centroid_point);
 
