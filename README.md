@@ -9,8 +9,8 @@
 * [Description](#Description)
 * [Prerequisites](#Prerequisites)
 * [Installation](#Installation)
-* [Usage](#Usage)
-* [Goal Parameters](#goal)
+* [Welding Estimation Usage](#usage_estimation)
+* [Welding Quality Usage](#usage_quality)
 * [Configuration](#config)
 * [Error List](#Error)
 * [Convention](#Convention)
@@ -29,7 +29,7 @@ A local perception pipeline to estimate joint welding points using point clouds.
 Joint welding estimation workflow.
 </p>
 
-#### a) Local Perception Welding Quality:
+#### b) Local Perception Welding Quality:
 
 A local perception pipeline to calculate the welding deposit quality. The pipeline workflow is presented in the next figure.
 
@@ -196,7 +196,7 @@ Not supported yet.
 
 
 
-### <a name="config"></a> 5. Configuration
+### <a name="config"></a> 6. Configuration
 
 The configuration file (_config.xml_) is placed in _/config_ directory. The list of parameters are described below. They are the same for welding estimation and quality servers since both share the same base pipeline.
 
@@ -244,7 +244,7 @@ The configuration file (_config.xml_) is placed in _/config_ directory. The list
 
 9.  **pose_filter/welding_interval**:  Define how many welding poses will be created.
 
-### <a name="Error"></a>6. Error List
+### <a name="Error"></a>7. Error List
 
 Below is listed the possible errors codes:
 - **101**: The server acquisition point cloud (from sensor) timeout is exceeded;
@@ -256,7 +256,7 @@ Below is listed the possible errors codes:
 - **107**: Server welding joint estimation error. The estimated planes are not parallel.
 - **108**: Quality estimation error. The ICP did not converge not estimating the welding line frame.
 
-### <a name="Convention"></a>7. Convention
+### <a name="Convention"></a>8. Convention
    The camera frame can be defined by the Optical or ROS convention according to the package/manufacturer design. See below:
 
 ![alt text](local_perception_server/images/conventions.png)
