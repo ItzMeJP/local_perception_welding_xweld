@@ -2,7 +2,7 @@
 /**\file local_perception_server.cpp
  * \brief implementation of local perception server in ROS
  *
- * @version 2.0.1
+ * @version 3.0.0
  * @author João Pedro Carvalho de Souza
  * @email: josouza@fe.up.pt
  */
@@ -18,6 +18,15 @@ namespace local_perception_server {
         input_cloud_ = PointCloudPtrLP (new PointCloudLP);
         input_cloud_bkup_ = PointCloudPtrLP (new PointCloudLP);
         post_cropbox_input_cloud_bkup_ = PointCloudPtrLP (new PointCloudLP);
+        plane_cloud_a_= PointCloudPtrLP (new PointCloudLP);
+        plane_cloud_b_ = PointCloudPtrLP (new PointCloudLP);
+        plane_cloud_ab_ = PointCloudPtrLP (new PointCloudLP);
+        estimated_welding_line_cloud_ = PointCloudPtrLP (new PointCloudLP);
+        intersection_region_cloud_ = PointCloudPtrLP (new PointCloudLP);
+        welding_deposit_cloud_wrt_sensor_ = PointCloudPtrLP (new PointCloudLP);
+        welding_deposit_cloud_wrt_line_axis_ = PointCloudPtrLP (new PointCloudLP);
+        all_segmented_planes_cloud_ = PointCloudPtrLP (new PointCloudLP);
+
         tf_buffer_       = std::make_shared<tf2_ros::Buffer>(ros::Duration(600));
         tf_listener_ptr_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
 
@@ -33,13 +42,22 @@ namespace local_perception_server {
         actionServer_ = std::make_shared<LocalPerceptionActionServer>(*node_handle_, action_server_name_,
                                                                     boost::bind(&LocalPerception::executeCB,
                                                                                 this, _1));
+
+        actionQualityServer_ = std::make_shared<LocalQualityPerceptionActionServer>(*node_handle_, action_quality_server_name_,
+                                                                             boost::bind(&LocalPerception::executeQualityCB,
+                                                                                         this, _1));
         actionServer_->start();
+        actionQualityServer_->start();
     }
+
+    /// ##############################################
+    /// Local perception server action definitions
+    /// ##############################################
 
     void LocalPerception::executeCB (const local_perception_msgs::LocalPerceptionGoalConstPtr &_goal) {
         result_.welding_list.welding.clear();
         aborted_msg_ = "Aborted. Error(s):";
-        run(_goal)?setSucceeded():setAborted(aborted_msg_);
+        runWeldingEstimationPipeline(_goal)?setSucceeded():setAborted(aborted_msg_);
     }
 
     void LocalPerception::setSucceeded (std::string outcome) {
@@ -50,6 +68,7 @@ namespace local_perception_server {
         ROS_INFO_STREAM(action_server_name_ << ": Succeeded");
         actionServer_->setSucceeded(result_);
     }
+
     void LocalPerception::setAborted (std::string outcome) {
         result_.percentage  = 0;
         result_.skillStatus = action_server_name_;
@@ -58,6 +77,8 @@ namespace local_perception_server {
         ROS_INFO_STREAM(action_server_name_ << ": Aborted");
         actionServer_->setAborted(result_);
     }
+
+
     void LocalPerception::feedback (float percentage) {
         feedback_.percentage  = percentage;
         feedback_.skillStatus = action_server_name_;
@@ -65,6 +86,7 @@ namespace local_perception_server {
         ROS_INFO_STREAM(action_server_name_ << ": Executing. Percentage" << percentage);
         actionServer_->publishFeedback(feedback_);
     }
+
     bool LocalPerception::checkPreemption () {
         if (actionServer_->isPreemptRequested() || !ros::ok()) {
             result_.percentage  = 0;
@@ -73,6 +95,55 @@ namespace local_perception_server {
             result_.outcome     = "preempted";
             ROS_INFO_STREAM(action_server_name_ << ": Preempted");
             actionServer_->setPreempted(result_);
+            return true;
+        } else {
+            return false;
+        }
+    }
+    /// ####################################################
+    /// Local quality perception server action definitions
+    /// ####################################################
+
+
+    void LocalPerception::executeQualityCB (const local_perception_msgs::LocalQualityPerceptionGoalConstPtr &_goal) {
+        quality_result_.output.quality_list.clear();
+        aborted_msg_ = "Aborted. Error(s):";
+        runQualityPipeline(_goal)?setQualitySucceeded():setQualityAborted(aborted_msg_);
+    }
+
+    void LocalPerception::setQualitySucceeded (std::string outcome) {
+        quality_result_.percentage  = 100;
+        quality_result_.skillStatus = action_quality_server_name_;
+        quality_result_.skillStatus += ": Succeeded";
+        quality_result_.outcome     = outcome;
+        ROS_INFO_STREAM(action_quality_server_name_ << ": Succeeded");
+        actionQualityServer_->setSucceeded(quality_result_);
+    }
+
+    void LocalPerception::setQualityAborted (std::string outcome) {
+        quality_result_.percentage  = 0;
+        quality_result_.skillStatus = action_quality_server_name_;
+        quality_result_.skillStatus += ": Aborted";
+        quality_result_.outcome     = outcome;
+        ROS_INFO_STREAM(action_quality_server_name_ << ": Aborted");
+        actionQualityServer_->setAborted(quality_result_);
+    }
+
+    void LocalPerception::feedbackQuality (float percentage) {
+        quality_feedback_.percentage  = percentage;
+        quality_feedback_.skillStatus = action_quality_server_name_;
+        quality_feedback_.skillStatus += " Executing";
+        ROS_INFO_STREAM(action_quality_server_name_ << ": Executing. Percentage" << percentage);
+        actionQualityServer_->publishFeedback(quality_feedback_);
+    }
+    bool LocalPerception::checkQualityPreemption () {
+        if (actionQualityServer_->isPreemptRequested() || !ros::ok()) {
+            quality_result_.percentage  = 0;
+            quality_result_.skillStatus = action_quality_server_name_;
+            quality_result_.skillStatus += ": Preempted";
+            quality_result_.outcome     = "preempted";
+            ROS_INFO_STREAM(action_quality_server_name_ << ": Preempted");
+            actionQualityServer_->setPreempted(quality_result_);
             return true;
         } else {
             return false;
@@ -187,8 +258,8 @@ namespace local_perception_server {
         _private_node_handle->param<std::string>("input_cloud_topic", input_cloud_topic_,
                                                  "/camera/depth_registered/points");
 
-        _private_node_handle->param<std::string>("output_segmented_cloud_merged_topic",
-                                                 output_segmented_cloud_merged_topic_, "/cloud_seg_merged");
+        _private_node_handle->param<std::string>("output_all_segmented_planes_cloud_topic",
+                                                 output_segmented_cloud_merged_topic_, "/cloud_all_segmented_planes");
         _private_node_handle->param<std::string>("output_segmented_cloud_topic", output_segmented_cloud_topic_,
                                                  "/cloud_seg_reference");
         _private_node_handle->param<std::string>("output_cloud_filtered", output_input_cloud_filtered_,
@@ -199,8 +270,6 @@ namespace local_perception_server {
                                                  "/output_centroid_cloud");
         _private_node_handle->param<std::string>("output_welding_deposit_region_cloud", output_welding_deposit_region_cloud_,
                                                  "/welding_deposit_region_cloud");
-
-
 
 
         input_cloud_sub_ = private_node_handle_->subscribe(input_cloud_topic_, 1, &LocalPerception::CloudChatterCallback, this);
@@ -227,17 +296,8 @@ namespace local_perception_server {
     void LocalPerception::setupWeldingQualityConfigurationFromParameterServer (ros::NodeHandlePtr &_node_handle,
                                                                                     ros::NodeHandlePtr &_private_node_handle) {
 
-        _private_node_handle->param<bool>("quality/enable", quality_enable_, false);
-        _private_node_handle->param<double>("quality/threshold", quality_threshold_, 0.0);  // which convention is used to define the point cloud parent frame
-
-        if (!quality_enable_) {
-            ROS_WARN("Deactivating quality analyses.");
-            return;
-        }
-
-        _private_node_handle->param<double>("cropbox/horizontal_fov", hfov_, 80.0);
-        _private_node_handle->param<double>("cropbox/vertical_fov", vfov_, 60.0);
-        _private_node_handle->param<double>("cropbox/distance_range", distance_range_, 0.025);
+        //TODO:  to any future increment.
+       // _private_node_handle->param<double>("quality/threshold", quality_threshold_, 0.15);
 
     }
 
@@ -426,6 +486,106 @@ namespace local_perception_server {
         return true;
     }
 
+    //Deprecated
+    bool LocalPerception::cylinderSegmentation(pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr _input_cloud,
+                                                             pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr & _segmented_cloud,
+                                                             pcl::ModelCoefficients& _coefs){
+
+
+        pcl::PassThrough<PointLP> pass;
+        pcl::NormalEstimation<PointLP, pcl::Normal> ne;
+        pcl::SACSegmentationFromNormals<PointLP, pcl::Normal> seg;
+        pcl::ExtractIndices<PointLP> extract;
+        pcl::ExtractIndices<pcl::Normal> extract_normals;
+        pcl::search::KdTree<PointLP>::Ptr tree (new pcl::search::KdTree<PointLP> ());
+
+        // Datasets
+        pcl::PointCloud<PointLP>::Ptr cloud_filtered (new pcl::PointCloud<PointLP>);
+        pcl::PointCloud<pcl::Normal>::Ptr cloud_normals (new pcl::PointCloud<pcl::Normal>);
+        pcl::PointCloud<PointLP>::Ptr cloud_filtered2 (new pcl::PointCloud<PointLP>);
+        pcl::PointCloud<pcl::Normal>::Ptr cloud_normals2 (new pcl::PointCloud<pcl::Normal>);
+        pcl::ModelCoefficients::Ptr coefficients_plane (new pcl::ModelCoefficients), coefficients_cylinder (new pcl::ModelCoefficients);
+        pcl::PointIndices::Ptr inliers_plane (new pcl::PointIndices), inliers_cylinder (new pcl::PointIndices);
+
+
+
+/*
+        // Build a passthrough filter to remove spurious NaNs and scene background
+        pass.setInputCloud (_input_cloud);
+        pass.setFilterFieldName ("z");
+        pass.setFilterLimits (0, 1.5);
+        pass.filter (*cloud_filtered);
+        std::cerr << "PointCloud after filtering has: " << cloud_filtered->size () << " data points." << std::endl;
+*/
+        // Estimate point normals
+        ne.setSearchMethod (tree);
+        ne.setInputCloud (_input_cloud);
+        ne.setKSearch (50);
+        ne.compute (*cloud_normals);
+/*
+        // Create the segmentation object for the planar model and set all the parameters
+        seg.setOptimizeCoefficients (true);
+        seg.setModelType (pcl::SACMODEL_NORMAL_PLANE);
+        seg.setNormalDistanceWeight (0.1);
+        seg.setMethodType (pcl::SAC_RANSAC);
+        seg.setMaxIterations (100);
+        seg.setDistanceThreshold (0.03);
+        seg.setInputCloud (cloud_filtered);
+        seg.setInputNormals (cloud_normals);
+        // Obtain the plane inliers and coefficients
+        seg.segment (*inliers_plane, *coefficients_plane);
+        std::cerr << "Plane coefficients: " << *coefficients_plane << std::endl;
+
+        // Extract the planar inliers from the input cloud
+        extract.setInputCloud (cloud_filtered);
+        extract.setIndices (inliers_plane);
+        extract.setNegative (false);
+
+        // Write the planar inliers to disk
+        pcl::PointCloud<PointLP>::Ptr cloud_plane (new pcl::PointCloud<PointLP> ());
+        extract.filter (*cloud_plane);
+        std::cerr << "PointCloud representing the planar component: " << cloud_plane->size () << " data points." << std::endl;
+
+        // Remove the planar inliers, extract the rest
+        extract.setNegative (true);
+        extract.filter (*cloud_filtered2);
+        extract_normals.setNegative (true);
+        extract_normals.setInputCloud (cloud_normals);
+        extract_normals.setIndices (inliers_plane);
+        extract_normals.filter (*cloud_normals2);
+*/
+        // Create the segmentation object for cylinder segmentation and set all the parameters
+        seg.setOptimizeCoefficients (true);
+        seg.setModelType (pcl::SACMODEL_CYLINDER);
+        seg.setMethodType (pcl::SAC_RANSAC);
+        seg.setNormalDistanceWeight (0.1);
+        seg.setMaxIterations (10000);
+        seg.setDistanceThreshold (0.01);
+        //seg.setRadiusLimits (0, quality_threshold_);
+        seg.setInputCloud (_input_cloud);
+        seg.setInputNormals (cloud_normals);
+
+        // Obtain the cylinder inliers and coefficients
+        seg.segment (*inliers_cylinder, *coefficients_cylinder);
+        std::cerr << "Cylinder coefficients: " << *coefficients_cylinder << std::endl;
+
+        // Write the cylinder inliers to disk
+        extract.setInputCloud (_input_cloud);
+        extract.setIndices (inliers_cylinder);
+        extract.setNegative (false);
+
+        extract.filter (*_segmented_cloud);
+        if (_segmented_cloud->points.empty ()) {
+            std::cerr << "Can't find the cylindrical component." << std::endl;
+            return false;
+        }
+        else
+        {
+            std::cerr << "PointCloud representing the cylindrical component: " << _segmented_cloud->size () << " data points." << std::endl;
+            return true;
+        }
+    }
+
     void LocalPerception::CloudChatterCallback (const boost::shared_ptr<const sensor_msgs::PointCloud2> &input) {
 
         if(!isInputCloudCallbackMutexLocked()){
@@ -445,23 +605,48 @@ namespace local_perception_server {
         return a.second < b.second;
     }
 
-    bool LocalPerception::run (local_perception_msgs::LocalPerceptionGoalConstPtr _goal) {
+    bool LocalPerception::runWeldingEstimationPipeline (local_perception_msgs::LocalPerceptionGoalConstPtr _goal) {
 
-        PointCloudPtrLP     segmented_cloud_merged      (new PointCloudLP);
-        PointCloudPtrLP     aux_cloud_a                 (new PointCloudLP);
-        PointCloudPtrLP     aux_cloud_b                 (new PointCloudLP);
-        PointCloudPtrLP     aux_cloud_ab                (new PointCloudLP);
-        PointCloudPtrLP     intersection_line_cloud     (new PointCloudLP);
-        PointCloudPtrLP     intersection_region_cloud   (new PointCloudLP);
+        merged_goals.acquisition_distance = _goal->acquisition_distance;
+        merged_goals.edge_tolerance = _goal->edge_tolerance;
 
-        PointCloudPtrLP     welding_deposit_region      (new PointCloudLP);
+        if(!this->runBasicPipeline() ||
+           !this->applyCorrection(_goal->offset_compensation, welding_poses_arr_))
+            return false;
 
+        local_perception_msgs::PointArr welding_pose;
+        welding_pose.welding_line_index = 0;
+        welding_pose.welding_point_stamped = welding_poses_arr_;
+        result_.welding_list.welding.push_back(welding_pose);
 
-        std::vector<PointCloudLP> arr_cloud;
+        if(verbosity_levels::isROSDebug())
+            runDebugTools();
+
+        return true;
+
+    }
+
+    bool LocalPerception::runQualityPipeline(local_perception_msgs::LocalQualityPerceptionGoalConstPtr _goal){
+
+        merged_goals.acquisition_distance = _goal->acquisition_distance;
+        merged_goals.deposit_radius_tolerance = _goal->deposit_radius_tolerance;
+        merged_goals.output_path = _goal->output_path;
+
+        if(!this->runBasicPipeline() ||
+           !this->runQualityEvaluation())
+            return false;
+
+        if(verbosity_levels::isROSDebug())
+            runDebugTools();
+
+        return true;
+    }
+
+    bool LocalPerception::runBasicPipeline(){
+
         std::vector<pcl::ModelCoefficients> coefs_output_arr;
-        InfiniteLineDescriptors line;
+
         std::vector<Eigen::Vector3d> projected_point_arr;
-        std::vector<geometry_msgs::TransformStamped> poses_arr;
 
         if(!inputPointCloudVerification())
             return false;
@@ -471,7 +656,7 @@ namespace local_perception_server {
 
         if (cropbox_activation_) {
             BoxParametrization cropbox_parameters;
-            if (!setupCropboxParameters(_goal->acquisition_distance, cropbox_parameters) ||
+            if (!setupCropboxParameters(merged_goals.acquisition_distance, cropbox_parameters) ||
                 !local_perception_server::pcl_complement::applyCropbox(input_cloud_, cropbox_parameters.min_vertex_arr,cropbox_parameters.max_vertex_arr)) {
                 aborted_msg_ += " " + std::to_string(ERROR_LIST::INPUT_CLOUD_CROPBOX_ERROR);
                 return false;
@@ -488,13 +673,13 @@ namespace local_perception_server {
 
         local_perception_server::pcl_complement::pubCloud(pub_input_filtered_, input_cloud_);
 
-        if(!this->planeSegmentation(input_cloud_, segmented_cloud_merged, arr_cloud, coefs_output_arr))
+        if(!this->planeSegmentation(input_cloud_, all_segmented_planes_cloud_, all_segmented_planes_arr_, coefs_output_arr))
             return false;
 
-        local_perception_server::pcl_complement::pubCloud(pub_seg_merged_, segmented_cloud_merged);
-        ROS_INFO_STREAM(" # " << arr_cloud.size() << " planes had been found.");
+        local_perception_server::pcl_complement::pubCloud(pub_seg_merged_, all_segmented_planes_cloud_);
+        ROS_INFO_STREAM(" # " << all_segmented_planes_arr_.size() << " planes had been found.");
 
-        if(arr_cloud.size()<2){
+        if(all_segmented_planes_arr_.size()<2){
             ROS_ERROR_STREAM("Not enough planes were found.");
             aborted_msg_ += " " + std::to_string(ERROR_LIST::SMALL_NUMBER_OF_PLANES_FOUND);
             return false;
@@ -502,85 +687,286 @@ namespace local_perception_server {
 
         // TODO: adapt it to generate all intersections
 
-        *aux_cloud_a = arr_cloud.at(index_cloud_plane_a_);
-        *aux_cloud_b = arr_cloud.at(index_cloud_plane_b_);
+        *plane_cloud_a_ = all_segmented_planes_arr_.at(index_cloud_plane_a_);
+        *plane_cloud_b_ = all_segmented_planes_arr_.at(index_cloud_plane_b_);
+        *plane_cloud_ab_ = *plane_cloud_a_ + *plane_cloud_b_;
 
-        *aux_cloud_ab              = *aux_cloud_a + *aux_cloud_b;
+        local_perception_server::pcl_complement::pubCloud(pub_seg_, plane_cloud_ab_);
 
-        local_perception_server::pcl_complement::pubCloud(pub_seg_, aux_cloud_ab);
-
-        if(!this->generateIntersectionLine(coefs_output_arr.at(index_cloud_plane_a_),coefs_output_arr.at(index_cloud_plane_b_), intersection_line_cloud,line)
-                                       || !this->calculateIntersectionRegion(aux_cloud_ab, line, distance_to_line_threshold_, intersection_region_cloud)
-                                       || !this->projectPointCloudToLine(intersection_region_cloud, line, projected_point_arr)
-                                       || !this->generateWeldingPoses (projected_point_arr, line, intersection_region_cloud->header.frame_id, poses_arr)
-                                       || !this->applyCorrection(_goal->offset_compensation, poses_arr) )
+        if(!this->generateIntersectionLine(coefs_output_arr.at(index_cloud_plane_a_),coefs_output_arr.at(index_cloud_plane_b_), estimated_welding_line_cloud_,estimated_welding_line_)
+           || !this->calculateIntersectionRegion(plane_cloud_ab_, estimated_welding_line_, distance_to_line_threshold_, intersection_region_cloud_)
+           || !this->projectPointCloudToLine(intersection_region_cloud_, estimated_welding_line_, projected_point_arr)
+           || !this->generateWeldingPoses (projected_point_arr, estimated_welding_line_, intersection_region_cloud_->header.frame_id, welding_poses_arr_)
+                )
             return false;
 
-        local_perception_msgs::PointArr welding_pose;
-        welding_pose.welding_line_index = 0;
-        welding_pose.welding_point_stamped = poses_arr;
+        return true;
+    }
 
-        result_.welding_list.welding.push_back(welding_pose);
+    bool LocalPerception::runDebugTools(){
 
-        if(quality_enable_)
-        {
-
-             PointLP quality_cropbox_min, quality_cropbox_max;
-            pcl::getMinMax3D(*aux_cloud_ab, quality_cropbox_min, quality_cropbox_max);
-
-
-            quality_cropbox_min.x = quality_cropbox_min.x + quality_threshold_;
-            quality_cropbox_min.y = quality_cropbox_min.y + quality_threshold_;
-            quality_cropbox_min.z = quality_cropbox_min.z + quality_threshold_;
-
-            copyPointCloud(*post_cropbox_input_cloud_bkup_, *welding_deposit_region);
-
-            pcl_complement::applyCropbox(welding_deposit_region, quality_cropbox_min, quality_cropbox_max);
-
-            //*welding_deposit_region = *welding_deposit_region - *aux_cloud_ab;
-
-            //local_perception_server::pcl_complement::pubCloud(pub_welding_deposit_region_cloud_, welding_deposit_region);
-
-
-            this->calculateIntersectionRegion(welding_deposit_region, line, quality_threshold_, welding_deposit_region);
-            local_perception_server::pcl_complement::pubCloud(pub_welding_deposit_region_cloud_, welding_deposit_region);
-
+        for (size_t i = 0; i < welding_poses_arr_.size(); ++i) {
+            static_broadcaster_.sendTransform(welding_poses_arr_.at(i));
         }
 
-        if(verbosity_levels::isROSDebug()) {
+        geometry_msgs::TransformStamped pRefTf;
+        pRefTf.header.frame_id         = intersection_region_cloud_->header.frame_id;
+        pRefTf.header.stamp            = ros::Time::now();
+        pRefTf.child_frame_id          = "welding_pose_reference";
+        pRefTf.transform.translation.x = estimated_welding_line_.reference_point[0] ;
+        pRefTf.transform.translation.y = estimated_welding_line_.reference_point[1] ;
+        pRefTf.transform.translation.z = estimated_welding_line_.reference_point[2];
+        pRefTf.transform.rotation.x    = 0;
+        pRefTf.transform.rotation.y    = 0;
+        pRefTf.transform.rotation.z    = 0;
+        pRefTf.transform.rotation.w    = 1;
+        static_broadcaster_.sendTransform(pRefTf);
 
-            for (size_t i = 0; i < poses_arr.size(); ++i) {
-                static_broadcaster_.sendTransform(poses_arr.at(i));
-            }
+        local_perception_server::pcl_complement::pubCloud(pub_intersection_line_cloud_, estimated_welding_line_cloud_);
+        local_perception_server::pcl_complement::pubCloud(pub_intersection_region_cloud_,intersection_region_cloud_);
 
-            geometry_msgs::TransformStamped pRefTf;
-            pRefTf.header.frame_id         = intersection_region_cloud->header.frame_id;
-            pRefTf.header.stamp            = ros::Time::now();
-            pRefTf.child_frame_id          = "welding_pose_reference";
-            pRefTf.transform.translation.x = line.reference_point[0] ;
-            pRefTf.transform.translation.y = line.reference_point[1] ;
-            pRefTf.transform.translation.z = line.reference_point[2];
-            pRefTf.transform.rotation.x    = 0;
-            pRefTf.transform.rotation.y    = 0;
-            pRefTf.transform.rotation.z    = 0;
-            pRefTf.transform.rotation.w    = 1;
-            static_broadcaster_.sendTransform(pRefTf);
+        return true;
+    }
 
-            local_perception_server::pcl_complement::pubCloud(pub_intersection_line_cloud_, intersection_line_cloud);
-            local_perception_server::pcl_complement::pubCloud(pub_intersection_region_cloud_,
-                                                              intersection_region_cloud);
+    bool LocalPerception::runQualityEvaluation()
+    {
+
+        this->calculateIntersectionRegion(post_cropbox_input_cloud_bkup_,
+                                          estimated_welding_line_,
+                                          merged_goals.deposit_radius_tolerance,
+                                          welding_deposit_cloud_wrt_sensor_);
 
 
+        ROS_WARN_STREAM("Total number of point in welding deposit: " << welding_deposit_cloud_wrt_sensor_->size());
+
+        buildWeldingLineFrame();
+
+        pcl::transformPointCloud(*welding_deposit_cloud_wrt_sensor_,*welding_deposit_cloud_wrt_line_axis_, transformation_aligned_line_frame_wrt_sensor_.inverse(), true);
+
+        welding_deposit_cloud_wrt_line_axis_->header.frame_id = "welding_pose_reference_aligned";
+
+        local_perception_server::pcl_complement::pubCloud(pub_welding_deposit_region_cloud_, welding_deposit_cloud_wrt_line_axis_);
+
+        exportQualityResult();
+
+        return true;
+    }
+
+    bool LocalPerception::getAlignment(Eigen::Matrix4d &T){
+
+        Eigen::VectorXf parent_line_coefs (6);
+
+        logStreamStr_.clear();
+        if(cropbox_frame_id_norm_ == CAMERA_FRAME_NORM_TYPE::ROS){
+            logStreamStr_  << "Frame Convention," << "ROS\n";
+            parent_line_coefs << 0,0,0,0,1,0; // aligning the Y-axis since it is the baseline in ROS convention.
+        }
+
+        else if (cropbox_frame_id_norm_ == CAMERA_FRAME_NORM_TYPE::OPTICAL) {
+            logStreamStr_  << "Frame Convention," << "Optical\n";
+            parent_line_coefs << 0,0,0,1,0,0; // aligning the X-axis since it is the baseline OPTICAL convention.
+        }
+
+        PointCloudPtrLP     parent_line_cloud      (new PointCloudLP);
+        PointCloudPtrLP     parent_aligned_line_cloud      (new PointCloudLP);
+
+
+        createLineCloud(parent_line_coefs,parent_line_cloud);
+        parent_line_cloud->header = estimated_welding_line_cloud_->header;
+
+        if(!pcl_complement::applyICP(parent_line_cloud,estimated_welding_line_cloud_,parent_aligned_line_cloud,T)){
+            ROS_ERROR("ICP did not converge");
+            aborted_msg_ += " " + std::to_string(ERROR_LIST::ICP_NOT_CONVERGED);
+            return false;
         }
 
         return true;
 
     }
 
-    bool LocalPerception::runQualityEvaluation(){
+    bool LocalPerception::buildWeldingLineFrame(){
 
-        //TODO
+        Eigen::Matrix4d T;
+        getAlignment(T);
+
+        transformation_aligned_line_frame_wrt_sensor_ = T;
+
+        Eigen::Quaterniond q(transformation_aligned_line_frame_wrt_sensor_.rotation());
+
+
+        t_aligned_ref_wrt_sensor_.header.frame_id         = estimated_welding_line_cloud_->header.frame_id;
+        t_aligned_ref_wrt_sensor_.header.stamp            = ros::Time::now();
+        t_aligned_ref_wrt_sensor_.child_frame_id          = "welding_pose_reference_aligned";
+        t_aligned_ref_wrt_sensor_.transform.translation.x = transformation_aligned_line_frame_wrt_sensor_.translation().x();
+        t_aligned_ref_wrt_sensor_.transform.translation.y = transformation_aligned_line_frame_wrt_sensor_.translation().y();
+        t_aligned_ref_wrt_sensor_.transform.translation.z = transformation_aligned_line_frame_wrt_sensor_.translation().z();
+        t_aligned_ref_wrt_sensor_.transform.rotation.x    = q.x();
+        t_aligned_ref_wrt_sensor_.transform.rotation.y    = q.y();
+        t_aligned_ref_wrt_sensor_.transform.rotation.z    = q.z();
+        t_aligned_ref_wrt_sensor_.transform.rotation.w    = q.w();
+
+        static_broadcaster_.sendTransform(t_aligned_ref_wrt_sensor_);
+
         return true;
+    }
+
+    //deprecated, need adjusts
+    bool LocalPerception::buildWeldingLineFrame(geometry_msgs::TransformStamped _custom_position){
+
+        Eigen::Matrix4d T;
+        getAlignment(T);
+
+        transformation_aligned_line_frame_wrt_sensor_ = T;
+
+        Eigen::Quaterniond q(transformation_aligned_line_frame_wrt_sensor_.rotation());
+
+        geometry_msgs::TransformStamped toPub;
+
+        toPub.header.frame_id         = estimated_welding_line_cloud_->header.frame_id;
+        toPub.header.stamp            = ros::Time::now();
+        toPub.child_frame_id          = "welding_pose_reference_aligned";
+        toPub.transform.translation.x = _custom_position.transform.translation.x ;
+        toPub.transform.translation.y = _custom_position.transform.translation.y ;
+        toPub.transform.translation.z = _custom_position.transform.translation.z;
+        toPub.transform.rotation.x    = q.x();
+        toPub.transform.rotation.y    = q.y();
+        toPub.transform.rotation.z    = q.z();
+        toPub.transform.rotation.w    = q.w();
+
+        static_broadcaster_.sendTransform(toPub);
+
+        return true;
+    }
+
+    bool LocalPerception::exportQualityResult(){
+
+        std::vector<double> each_point_x_distance_to_welding_line,
+                            each_point_y_distance_to_welding_line,
+                            each_point_z_distance_to_welding_line,
+                            each_point_distance_to_welding_line;
+
+        local_perception_msgs::QualityArr q_arr;
+
+        distFromLine(welding_deposit_cloud_wrt_sensor_,estimated_welding_line_, each_point_distance_to_welding_line);
+
+        logStreamStrPC_.clear();
+        logStreamStrPC_  << "Welding Deposit Cloud.\n";
+        logStreamStrPC_  << "X,Y,Z," "\n";
+
+        for (size_t i = 0; i < welding_deposit_cloud_wrt_line_axis_->size(); ++i) {
+
+            PointLP& point = welding_deposit_cloud_wrt_line_axis_->at(i);
+
+            each_point_x_distance_to_welding_line.push_back(point.x);
+            each_point_y_distance_to_welding_line.push_back(point.y);
+            each_point_z_distance_to_welding_line.push_back(point.z);
+
+            logStreamStrPC_ << point.x << "," << point.y << "," << point.z << "\n";
+
+        }
+
+        logStreamStr_  << "Welding Deposit Cloud Parent Frame," << t_aligned_ref_wrt_sensor_.child_frame_id <<"\n";
+        logStreamStr_  << "Welding Deposit Cloud Parent Frame Definition\n";
+        logStreamStr_  << "Parent Frame," << t_aligned_ref_wrt_sensor_.header.frame_id <<"\n";
+        logStreamStr_  << "Position [x | y | z][meters]," << t_aligned_ref_wrt_sensor_.transform.translation.x <<
+                       "," << t_aligned_ref_wrt_sensor_.transform.translation.y <<
+                       "," << t_aligned_ref_wrt_sensor_.transform.translation.z << "\n";
+
+        logStreamStr_  << "Rotation [qx | qy | qz | qw]," << t_aligned_ref_wrt_sensor_.transform.rotation.x <<
+                       "," << t_aligned_ref_wrt_sensor_.transform.rotation.y <<
+                       "," << t_aligned_ref_wrt_sensor_.transform.rotation.z <<
+                       "," << t_aligned_ref_wrt_sensor_.transform.rotation.w << "\n";
+
+        logStreamStr_ << "Quality Params\n";
+
+        if(cropbox_frame_id_norm_ == CAMERA_FRAME_NORM_TYPE::ROS)
+        {
+            q_arr.quality_list.clear();
+            buildResult(each_point_distance_to_welding_line,"distance", q_arr);
+            buildResult(each_point_x_distance_to_welding_line,"x", q_arr);
+            buildResult(each_point_y_distance_to_welding_line,"y", q_arr);
+
+        }
+
+        else if (cropbox_frame_id_norm_ == CAMERA_FRAME_NORM_TYPE::OPTICAL) {
+
+            quality_result_.output.quality_list.clear();
+            buildResult(each_point_distance_to_welding_line,"distance", q_arr);
+            buildResult(each_point_y_distance_to_welding_line,"y", q_arr);
+            buildResult(each_point_z_distance_to_welding_line,"z", q_arr);
+
+        }
+
+        quality_result_.output.quality_list.clear();
+        quality_result_.output.quality_list = q_arr.quality_list;
+        quality_result_.output.quality_reference_frame_definition = t_aligned_ref_wrt_sensor_;
+
+
+
+
+
+        exportCSVFile();
+
+        return true;
+    }
+
+    bool LocalPerception::buildResult(std::vector<double> _input_arr, std::string _post_prefix, local_perception_msgs::QualityArr &_result_arr){
+
+
+        double std = StdVectorOperation::getStdDeviationValue(_input_arr);
+        double avg = StdVectorOperation::getAverageValue(_input_arr);
+        double min = StdVectorOperation::getMinimumValue(_input_arr);
+        double max = StdVectorOperation::getMaximumValue(_input_arr);
+
+        std::vector<std::string> str_arr;
+        std::vector<double> val_arr;
+        local_perception_msgs::QualityMsg q;
+
+        val_arr.clear();
+        str_arr.clear();
+
+        val_arr.insert(val_arr.end(), {avg, std, min, max});
+        str_arr =  {"avg_"+_post_prefix, "std_"+_post_prefix, "min_"+_post_prefix, "max_"+_post_prefix} ;
+
+        for (size_t i = 0; i < str_arr.size() ; ++i) {
+            q.param_name = str_arr.at(i);
+            q.param_value = val_arr.at(i);
+            _result_arr.quality_list.push_back(q);
+            ROS_DEBUG_STREAM(q.param_name << " = " << q.param_value);
+            logStreamStr_ << q.param_name << "," << q.param_value <<"\n";
+        }
+
+        return true;
+
+    }
+
+    bool LocalPerception::exportCSVFile(){
+
+        std::ofstream file1, file2;
+        ros::Time     t = ros::Time().now();
+
+        std::string file_path_and_name_info = merged_goals.output_path+"/" + std::to_string(t.sec) + "_info.csv",
+                    file_path_and_name_pc = merged_goals.output_path+"/" + std::to_string(t.sec) + "_point_cloud.csv";
+
+        file1.open(file_path_and_name_info);
+        file2.open(file_path_and_name_pc);
+
+        if (file1.fail()) {
+            char *homepath = getenv("HOME");
+            std::string homepath_s(homepath);
+            ROS_ERROR_STREAM("Failed to save the file: " << file_path_and_name_info << ". Saving log files to the home dir.");
+            file1.open(homepath_s + +"/" + std::to_string(t.sec) + "_info.csv");
+            file2.open(homepath_s + +"/" + std::to_string(t.sec) + "_point_cloud.csv");
+        }
+
+        file1 << logStreamStr_.str();
+        file2 << logStreamStrPC_.str();
+
+        file1.close();
+        file2.close();
+
+        return true;
+
     }
 
     bool LocalPerception::generateIntersectionLine (pcl::ModelCoefficients coefs_plane_a,
@@ -680,6 +1066,32 @@ namespace local_perception_server {
         }
         return true;
     }
+
+    bool LocalPerception::distFromLine(PointCloudPtrLP _input_cloud, InfiniteLineDescriptors _line, std::vector<double> &_distance_arr){
+
+        _distance_arr.clear();
+
+        for (size_t it = 0; it < _input_cloud->points.size(); ++it) {
+
+            pcl::PointXYZRGBNormal point;
+
+            Eigen::Vector3d current_p(_input_cloud->points.at(it).x,
+                                      _input_cloud->points.at(it).y,
+                                      _input_cloud->points.at(it).z),
+                    ap, projected_point;
+
+            ap = current_p - _line.reference_point;
+            projected_point =
+                    (ap.dot(_line.direction_vector) / _line.direction_vector.dot(_line.direction_vector) * _line.direction_vector) +
+                    _line.reference_point;
+
+            ap = current_p - projected_point;
+
+            _distance_arr.push_back(ap.norm());
+        }
+        return true;
+    }
+
 
     bool LocalPerception::generateWeldingPoses (std::vector<Eigen::Vector3d> _projected_point_arr, InfiniteLineDescriptors _line,
                                                 std::string _parent_frame_id, std::vector<geometry_msgs::TransformStamped> &_poses_arr) {

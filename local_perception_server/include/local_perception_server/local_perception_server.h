@@ -2,7 +2,7 @@
 /**\file local_perception_server.h
  * \brief definition of local perception server in ROS
  *
- * @version 2.0.1
+ * @version 3.0.0
  * @author João Pedro Carvalho de Souza
  * @email: josouza@fe.up.pt
  */
@@ -21,6 +21,9 @@
 #include <fstream>
 #include <iostream>
 #include <angles/angles.h>
+#include <algorithm>
+
+#include <std_vector_complement/std_vector_operations.h>
 
 
 //#include <pcl/types.h>
@@ -40,11 +43,8 @@
 #include <pcl/filters/project_inliers.h>
 #include <pcl/filters/crop_box.h>
 #include <pcl/common/common.h>
+#include <pcl/filters/passthrough.h>
 
-//#include <pcl/filters/crop_box.h>
-
-//#include <pcl/visualization/pcl_visualizer.h>
-//#include <pcl/io/pcd_io.h>
 
 #include <bits/stdc++.h>
 
@@ -55,6 +55,9 @@
 #include <local_perception_msgs/LocalPerceptionAction.h>
 #include <local_perception_msgs/PointArr.h>
 #include <local_perception_msgs/WeldingArr.h>
+#include <local_perception_msgs/LocalQualityPerceptionAction.h>
+#include <local_perception_msgs/QualityMsg.h>
+#include <local_perception_msgs/QualityArr.h>
 
 #ifndef LOCAL_PERCEPTION_SERVER_H
 #define LOCAL_PERCEPTION_SERVER_H
@@ -65,7 +68,9 @@ namespace local_perception_server {
         typedef pcl::PointXYZRGBNormal PointLP;
         typedef pcl::PointCloud<pcl::PointXYZRGBNormal> PointCloudLP;
         typedef pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr PointCloudPtrLP;
+
         typedef actionlib::SimpleActionServer<local_perception_msgs::LocalPerceptionAction> LocalPerceptionActionServer;
+        typedef actionlib::SimpleActionServer<local_perception_msgs::LocalQualityPerceptionAction> LocalQualityPerceptionActionServer;
 
         struct InfiniteLineDescriptors{
             Eigen::Vector3d reference_point,
@@ -76,6 +81,11 @@ namespace local_perception_server {
             std::vector<double> min_vertex_arr, max_vertex_arr;
         };
 
+        struct PointDistances{
+            std::string parent_frame;
+            double x,y,z,distance;
+        };
+
         enum ERROR_LIST{
             CLOUD_RECEPTION_TIMEOUT = 101,
             PLANE_SEG_SMALL_INPUT_CLOUD_SIZE,
@@ -83,7 +93,8 @@ namespace local_perception_server {
             INPUT_CLOUD_CROPBOX_ERROR,
             INPUT_CLOUD_VOXELGRID_ERROR,
             SMALL_NUMBER_OF_PLANES_FOUND,
-            LINE_ESTIMATION_PLANE_PARALLEL_ERROR
+            LINE_ESTIMATION_PLANE_PARALLEL_ERROR,
+            ICP_NOT_CONVERGED,
         };
 
         enum CAMERA_FRAME_NORM_TYPE{
@@ -95,11 +106,19 @@ namespace local_perception_server {
         ~LocalPerception();
 
         void start(); //start the server
+
         void executeCB (const local_perception_msgs::LocalPerceptionGoalConstPtr &goal); // recognize the goal request
+        void executeQualityCB (const local_perception_msgs::LocalQualityPerceptionGoalConstPtr &_goal);
+
         void feedback (float percentage);
         void setSucceeded (std::string outcome = "succeeded");
         void setAborted (std::string outcome);
         bool checkPreemption ();
+
+        void feedbackQuality (float percentage);
+        void setQualitySucceeded (std::string outcome = "succeeded");
+        void setQualityAborted (std::string outcome);
+        bool checkQualityPreemption ();
 
         void setupParameterServer(ros::NodeHandlePtr &_node_handle,
                                   ros::NodeHandlePtr &_private_node_handle);
@@ -123,17 +142,44 @@ namespace local_perception_server {
         void setupPlaneIntersectionConfigurationFromParameterServer(ros::NodeHandlePtr &_node_handle,
                                                                     ros::NodeHandlePtr &_private_node_handle);
 
-        bool run(local_perception_msgs::LocalPerceptionGoalConstPtr);
+        bool runWeldingEstimationPipeline(local_perception_msgs::LocalPerceptionGoalConstPtr);
+
+        bool runQualityPipeline(local_perception_msgs::LocalQualityPerceptionGoalConstPtr);
+
+        bool runBasicPipeline();
+
 
         bool runQualityEvaluation();
+
+        bool getAlignment(Eigen::Matrix4d &T);
+
+        bool buildWeldingLineFrame();
+        bool buildWeldingLineFrame(geometry_msgs::TransformStamped _custom_position);
 
     protected:
 
 
         std::shared_ptr<LocalPerceptionActionServer>                             actionServer_; // to not init it in the constructor
         std::string                                                              action_server_name_ = "LocalPerceptionActionServer";
+
         local_perception_msgs::LocalPerceptionFeedback                      feedback_;
         local_perception_msgs::LocalPerceptionResult                        result_;
+
+        std::shared_ptr<LocalQualityPerceptionActionServer>                      actionQualityServer_; // to not init it in the constructor
+        std::string                                                              action_quality_server_name_ = "LocalQualityPerceptionActionServer";
+
+        local_perception_msgs::LocalQualityPerceptionFeedback                      quality_feedback_;
+        local_perception_msgs::LocalQualityPerceptionResult                        quality_result_;
+
+        struct MergedGoals{
+            double  acquisition_distance,
+                    deposit_radius_tolerance,
+                    edge_tolerance;
+            std::vector<float> offset_compensation;
+            std::string output_path;
+        } merged_goals;
+
+        Eigen::Affine3d transformation_aligned_line_frame_wrt_sensor_;
 
         double seg_thresehold_,
                normal_dist_weight_,
@@ -146,8 +192,9 @@ namespace local_perception_server {
                input_cloud_timeout_threshold_,
                hfov_,
                vfov_,
-               distance_range_,
-               quality_threshold_;
+               distance_range_;
+
+        InfiniteLineDescriptors estimated_welding_line_;
 
         int max_iterations_,
             normal_k_search_,
@@ -162,9 +209,9 @@ namespace local_perception_server {
             max_number_of_planes_;
 
         bool cropbox_activation_,
-             lock_input_pc_callback_mutex_ = true,
-             quality_enable_;
+             lock_input_pc_callback_mutex_ = true;
 
+        std::vector<geometry_msgs::TransformStamped> welding_poses_arr_;
 
         std::string axis_,
                     input_cloud_topic_,
@@ -185,6 +232,9 @@ namespace local_perception_server {
 
         std::vector<double> voxel_leaf_sizes_arr_;
 
+        geometry_msgs::TransformStamped t_aligned_ref_wrt_sensor_;
+
+        std::stringstream logStreamStr_, logStreamStrPC_;
 
         ros::NodeHandlePtr node_handle_,
                            private_node_handle_;
@@ -192,7 +242,17 @@ namespace local_perception_server {
         pcl::PCLPointCloud2::Ptr cloud_raw;
         PointCloudPtrLP input_cloud_,
                         input_cloud_bkup_,
-                        post_cropbox_input_cloud_bkup_;
+                        post_cropbox_input_cloud_bkup_,
+                        all_segmented_planes_cloud_,
+                        plane_cloud_a_, plane_cloud_b_, plane_cloud_ab_,
+                        estimated_welding_line_cloud_,
+                        intersection_region_cloud_,
+                        welding_deposit_cloud_wrt_sensor_,
+                        welding_deposit_cloud_wrt_line_axis_;
+                        ;
+
+        std::vector<PointCloudLP> all_segmented_planes_arr_;
+
 
         ros::Subscriber input_cloud_sub_;
 
@@ -221,6 +281,10 @@ namespace local_perception_server {
                                std::vector<pcl::PointCloud<pcl::PointXYZRGBNormal>> & _output_arr,
                                std::vector<pcl::ModelCoefficients>& _coefs_output_arr);
 
+        bool cylinderSegmentation(pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr _input_cloud,
+                                  pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr & _segmented_cloud,
+                                  pcl::ModelCoefficients& _coefs);
+
         bool inputPointCloudVerification();
 
 
@@ -233,6 +297,8 @@ namespace local_perception_server {
         bool calculateIntersectionRegion(PointCloudPtrLP input_cloud, InfiniteLineDescriptors _line , double _dist_threshold, PointCloudPtrLP &intersection_region_cloud );
 
         bool projectPointCloudToLine(PointCloudPtrLP _input_cloud, InfiniteLineDescriptors _line, std::vector<Eigen::Vector3d> &_projected_point_arr);
+
+        bool distFromLine(PointCloudPtrLP _input_cloud, InfiniteLineDescriptors _line, std::vector<double> &_distance_arr);
 
         bool generateWeldingPoses (std::vector<Eigen::Vector3d> _projected_point_arr, InfiniteLineDescriptors _line,
                                    std::string _parent_frame_id, std::vector<geometry_msgs::TransformStamped> &_poses_arr);
@@ -250,7 +316,14 @@ namespace local_perception_server {
 
         void unlockCloudCallbackMutex();
 
+        bool runDebugTools();
 
-    };
+        bool exportQualityResult();
+
+        bool buildResult(std::vector<double> _input_arr, std::string _post_prefix, local_perception_msgs::QualityArr &_result_arr);
+
+        bool exportCSVFile();
+
+        };
 }
 #endif //LOCAL_PERCEPTION_SERVER_H

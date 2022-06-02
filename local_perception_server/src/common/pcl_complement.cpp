@@ -141,6 +141,7 @@ namespace local_perception_server {
         bool applyVoxelGrid (pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr &_cloud,
                                               std::vector<double> _voxel_leaf_sizes_arr) {
 
+            ROS_INFO("Applying VoxelGrid Filter.");
 
             if (_cloud->width == 0) {
                 ROS_ERROR_STREAM("Empty input cloud in voxel grid filter");
@@ -176,6 +177,33 @@ namespace local_perception_server {
             centroid.get(_centroid_point);
 
             return true;
+
+        }
+
+        bool applyICP(pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr _cloud_src,
+                      pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr _cloud_target,
+                      pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr& _aligned_cloud,
+                      Eigen::Matrix4d& _transformation_matrix)
+        {
+            pcl::IterativeClosestPoint<pcl::PointXYZRGBNormal, pcl::PointXYZRGBNormal> icp;
+            icp.setInputSource(_cloud_src);
+            icp.setInputTarget(_cloud_target);
+
+            icp.align(*_aligned_cloud);
+/*
+            std::cout << "rviz_quality:" << icp.hasConverged() << " score: " <<
+                      icp.getFitnessScore() << std::endl;
+            std::cout << icp.getFinalTransformation() << std::endl;*/
+
+            ROS_INFO_STREAM("ICP converged ?: " << icp.hasConverged());
+
+            Eigen::Matrix<float, 4, 4> t = icp.getFinalTransformation();
+
+            for (int i = 0; i < t.size(); ++i) {
+                _transformation_matrix.data()[i] = t.data()[i];
+            }
+
+            return icp.hasConverged();
 
         }
 

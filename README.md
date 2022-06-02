@@ -17,11 +17,25 @@
 
 ### <a name="Description"></a>1. Description
 
-This package implements a local perception pipeline to estimate joint welding points using point clouds. For further detailed methodology description, check this [paper](https://ieeexplore.ieee.org/document/9429788).
+This package implements two welding pipeline based on ROS Action Lib. Each one is described below:
 
-![alt text](local_perception_server/images/pipeline.png)
+
+#### a) Local Perception Welding Estimation:
+
+A local perception pipeline to estimate joint welding points using point clouds. For further detailed methodology description, check this [paper](https://ieeexplore.ieee.org/document/9429788). The pipeline workflow is presented in the next figure.
+
+![alt text](local_perception_server/images/pipeline_estimation.png)
 <p align="center">
 Joint welding estimation workflow.
+</p>
+
+#### a) Local Perception Welding Quality:
+
+A local perception pipeline to calculate the welding deposit quality. The pipeline workflow is presented in the next figure.
+
+![alt text](local_perception_server/images/pipeline_quality.png)
+<p align="center">
+Welding deposit quality estimation workflow.
 </p>
 
 ### <a name="Prerequisites"></a>2. Prerequisites
@@ -33,7 +47,7 @@ The system was already tested on Ubuntu 16.04 and 20.04 with gcc-5 and gcc-9, re
 3. [PCL](https://pointclouds.org/downloads/) (PCL > 1.8.1 | Current Tests = PCL 1.11.0)
 4. [Eigen 3](https://gitlab.com/libeigen/eigen/-/releases/3.3.9)
 5. [Point Cloud IO](https://github.com/carlosmccosta/point_cloud_io)
-6. [Revopoint Cameras](https://github.com/ItzMeJP/revopoint_cameras_pkg)
+<!-- 6. [Revopoint Cameras](https://github.com/ItzMeJP/revopoint_cameras_pkg) -->
 
 ### <a name="Installation"></a>3. Installation
 
@@ -51,15 +65,16 @@ The system was already tested on Ubuntu 16.04 and 20.04 with gcc-5 and gcc-9, re
     cd ~/catkin_ws
     catkin build point_cloud_io
     ```
-### <a name="Usage"></a>4. Usage
 
-#### <a name="example_case"></a>Example case
+### <a name="usage_estimation"></a>4. Welding Estimation Server Usage
+
+#### <a name="example_case_estimation"></a> Example Case
 
 Run the following launch:
  ```
  roslaunch local_perception_server test.launch rs_435_example:=true
  ```
-Request action skill by sending the following goal. Check [this](#goal) section to further goal detail.
+Request action skill by sending the following goal. Check [this](#goal_welding_estimation) section to further goal detail.
  ```
     rostopic pub /LocalPerceptionActionServer/goal local_perception_msgs/LocalPerceptionActionGoal "header:
      seq: 0
@@ -78,7 +93,7 @@ Request action skill by sending the following goal. Check [this](#goal) section 
      edge_tolerance: 0.0"
  ```
 
-![alt text](local_perception_server/images/rviz.png)
+![alt text](local_perception_server/images/rviz_estimation.png)
 <p align="center">
 Rviz output
 </p>
@@ -88,15 +103,22 @@ Rviz output
 rostopic echo /LocalPerceptionActionServer/result  
 ```
 
-#### <a name="standalone_usage"></a>Standalone usage
+#### <a name="goal_welding_estimation"></a>  Goal Parameters
+The run-time parameters are defined in the goal. They are described below:
+
+ 1. **acquisition_distance**: The approximated acquisition euclidean distance (in meters) from camera to the welding region. This parameter will define the point cloud cropbox together with  _cropbox_ parameters in [config.yaml](#config).
+ 2. **offset_compensation**: An offset value array to adjust systematic errors. It sums the values in the welding pose results using the camera reference frame.
+ 3. **edge_tolerance**: deprecated.
+
+#### <a name="standalone_usage"></a>Standalone Usage
 
 For standalone usage, the user needs to configure the _config.yaml_ properly. Check [this](#config) section for further information. Then,  run the following launch:
  ```
     roslaunch local_perception_server run.launch
  ```
 
-The goal request and result verification are the same as [example case](#example_case)
-#### <a name="win_bridge"></a>Windows bridge usage
+The goal request and result verification are the same as [example case](#example_case_estimation)
+#### <a name="win_bridge"></a>Windows Bridge Usage
 
 Install the rosbridge package:
  ```
@@ -116,16 +138,67 @@ Run the main launch:
 For C# client development in Windows, check [Local Perception Client](https://github.com/ItzMeJP/local_perception_client) API.
 
 
-### <a name="goal"></a>  4. Goal Parameters
+### <a name="usage_quality"></a>5. Welding Quality Server Usage
+
+#### <a name="example_case_welding_quality"></a> Example Case
+
+Run the following launch:
+ ```
+ roslaunch local_perception_server test_welding_quality.launch
+ ```
+Request action skill by sending the following goal. Check [this](#goal_welding_quality) section to further goal detail.
+ ```
+ rostopic pub /LocalQualityPerceptionActionServer/goal local_perception_msgs/LocalQualityPerceptionActionGoal "header:
+   seq: 0
+   stamp:
+     secs: 0
+     nsecs: 0
+   frame_id: ''
+ goal_id:
+   stamp:
+     secs: 0
+     nsecs: 0
+   id: ''
+ goal:
+   acquisition_distance: 0.44
+   deposit_radius_tolerance: 0.01
+   output_path: '/home/'"
+ ```
+
+![alt text](local_perception_server/images/rviz_quality.png)
+<p align="center">
+Rviz output
+</p>
+
+  The result will be published as two _.csv_ file format at the output path defined in goal. It also publish a result at _LocalQualityPerceptionActionServer/result_ which topic can be verified by the following command:
+ ```
+rostopic echo /LocalQualityPerceptionActionServer/result
+```
+
+#### <a name="goal_welding_quality"></a>  Goal Parameters
 The run-time parameters are defined in the goal. They are described below:
 
  1. **acquisition_distance**: The approximated acquisition euclidean distance (in meters) from camera to the welding region. This parameter will define the point cloud cropbox together with  _cropbox_ parameters in [config.yaml](#config).
- 2. **offset_compensation**: An offset value array to adjust systematic errors. It sums the values in the welding pose results using the camera reference frame.
- 3. **edge_tolerance**: deprecated.  
+ 2. **deposit_radius_tolerance**: A cylindrical filter is deployed to select the welding deposit. This cylinder is related to an ideal welding line (which is estimated by the pipeline) with a radius defined by this parameter.
+ 3. **output_path**: output path to export the quality analyses file. If none is defined, the home directory is selected. Two _.csv_ files are exported related to welding deposit point cloud and another to general information.
+
+#### <a name="standalone_usage"></a>Standalone Usage
+
+For standalone usage, the user needs to configure the _config.yaml_ properly. Check [this](#config) section for further information. Then,  run the following launch:
+ ```
+    roslaunch local_perception_server run.launch
+ ```
+
+The goal request and result verification are the same as [example case](#example_case_welding_quality)
+#### <a name="win_bridge_quality"></a>Windows Bridge Usage
+
+Not supported yet.
+
+
 
 ### <a name="config"></a> 5. Configuration
 
-The configuration file (_config.xml_) is placed in _/config_ directory. The list of parameters are described below:
+The configuration file (_config.xml_) is placed in _/config_ directory. The list of parameters are described below. They are the same for welding estimation and quality servers since both share the same base pipeline.
 
 1. **ros_verbosity_level**: ROS verbosity level [DEBUG | INFO | WARN | ERROR | FATAL].
 2. **pcl_verbosity_level**: PCL verbosity level [DEBUG | INFO | WARN | ERROR | FATAL].
@@ -136,7 +209,7 @@ The configuration file (_config.xml_) is placed in _/config_ directory. The list
 	voxel_grid_filter:
 	  leaf_sizes: [0.0005, 0.0005, 0.0005]
 	```
-6.  **cropbox**: Cropbox parameters to define the point region of interest. The cropbox is define by the [goal](#goal)   parameter _acquistion_distance_ in run-time. However, some parameters are necessary to be configured in load time. Check [this](#Convention) to  rame ID norm information.
+6.  **cropbox**: Cropbox parameters to define the point region of interest. The cropbox is define by the [goal](#goal)   parameter _acquistion_distance_ in run-time. However, some parameters are necessary to be configured in load time. Check [this](#Convention) to  frame ID norm information.
 	```
 	cropbox:
 	  enable: TRUE # active the cropbox
@@ -181,6 +254,7 @@ Below is listed the possible errors codes:
 - **105**: Server down-sampling parameters error;
 - **106**: Server welding joint estimation error. There are not enough planes in the input cloud;
 - **107**: Server welding joint estimation error. The estimated planes are not parallel.
+- **108**: Quality estimation error. The ICP did not converge not estimating the welding line frame.
 
 ### <a name="Convention"></a>7. Convention
    The camera frame can be defined by the Optical or ROS convention according to the package/manufacturer design. See below:

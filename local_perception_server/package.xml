@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>local_perception_server</name>
-  <version>1.0.1</version>
+  <version>3.1.0</version>
   <description>The local_perception_server package</description>
 
   <maintainer email="joao.p.souza@inesctec.pt">João Pedro Carvalho de Souza</maintainer>

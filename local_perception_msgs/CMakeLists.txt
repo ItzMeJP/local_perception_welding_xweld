@@ -13,11 +13,14 @@ add_message_files(
         FILES
         WeldingArr.msg
         PointArr.msg
+        QualityMsg.msg
+        QualityArr.msg
 )
 
 add_action_files(
   FILES
   LocalPerception.action
+  LocalQualityPerception.action
 )
 
 generate_messages(

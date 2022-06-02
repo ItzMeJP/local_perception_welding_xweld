@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+
+  <arg name="tracer_p1_example" default="true" />
+
+  <node pkg="tf" type="static_transform_publisher" name="static_transform_publisher_pub_tracer_p1_example" args="0.440 0 0 0 0 0 camera_link map 100" if="$(arg tracer_p1_example)" />
+  <arg name="cloud_0" default="$(find local_perception_server)/data/example_pc_tracer_p2.ply" if="$(arg tracer_p1_example)" />
+
+  <node pkg="point_cloud_io" type="read" name="read_0" output="log">
+    <param name="file_path" value="$(arg cloud_0)" />
+    <param name="topic"     value="/camera/depth/color/points"/>
+    <param name="frame"     value="camera_link" />
+    <param name="rate"      value="10" />
+  </node>
+
+  <include file="$(find local_perception_server)/launch/run.launch">
+    <arg name="config_file" default="$(find local_perception_server)/config/config.yaml" />
+    <arg name="enable_rviz" default="true"/>
+    <arg name="rviz_config_name" default="rviz_quality"/>
+  </include>
+
+</launch>

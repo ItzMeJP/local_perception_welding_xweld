@@ -14,6 +14,7 @@
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/common/centroid.h>
+#include <pcl/registration/icp.h>
 
 namespace local_perception_server {
     namespace pcl_complement {
@@ -27,6 +28,11 @@ namespace local_perception_server {
 
         bool applyVoxelGrid(pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr& _cloud, std::vector<double> _voxel_leaf_sizes_arr);
         bool getCentroid(pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr _cloud, pcl::PointXYZRGBNormal _centroid_point);
+
+        bool applyICP(pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr _cloud_src,
+                      pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr _cloud_target,
+                      pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr& _aligned_cloud,
+                      Eigen::Matrix4d& _transformation_matrix);
 
     }
 }

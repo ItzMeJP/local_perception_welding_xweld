@@ -1,0 +1,2 @@
+geometry_msgs/TransformStamped quality_reference_frame_definition
+local_perception_msgs/QualityMsg[] quality_list
