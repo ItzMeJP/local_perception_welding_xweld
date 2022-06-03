@@ -19,7 +19,7 @@
   </node>
 
   <include file="$(find local_perception_server)/launch/run.launch">
-    <arg name="config_file" default="$(find local_perception_server)/config/config.yaml" />
+    <arg name="config_file" default="$(find local_perception_server)/config/config_estimation.yaml" />
     <arg name="enable_rviz" default="true"/>
     <arg name="rviz_config_name" default="rviz_estimation"/>
   </include>

@@ -1,0 +1,51 @@
+ros_verbosity_level: "DEBUG"
+pcl_verbosity_level: "ERROR"
+input_cloud_topic: "/camera/depth/color/points" #Input cloud ROS topic
+input_cloud_timeout_threshold: 7.0
+voxel_grid_filter: # Down-sampling the input cloud using voxel grids. Arr = [x,y,z] cube dimensions. Arr = [0,0,0] desactivate the filter
+  leaf_sizes: [0.002, 0.002, 0.002]
+cropbox:
+  enable: TRUE
+  frame_id_norm: 0 # Cropbox reference frame | 0 - Optical Convention  1 - ROS convention
+  horizontal_fov: 31.0 #degree
+  vertical_fov: 15.0
+  distance_range: 0.1 #tolerance range around the distance defined by the goal
+sac_method: # Generate an array of segmented planes. The size is defined by sac_method/max_number_of_planes and/or sac_method/left_rate_to_all_candidates. This array is ordered by biggest to lowest sized plane
+  method_type: 0 # SAC_RANSAC  = 0; SAC_LMEDS   = 1; SAC_MSAC    = 2; SAC_RRANSAC = 3; SAC_RMSAC   = 4; SAC_MLESAC  = 5; SAC_PROSAC  = 6;
+  model_type: 11 # Model Type (11 = PLANE)
+  axis: "x"
+  normal_k_search : 7  #This parameter allow to be independent radius search, therefore usefull for different resolution cameras
+  normal_radius_search: 0 # 0.0005
+  normal_distance_weight: 0.0005
+  segmentation_threshold: 0.001
+  inliers_threshold_weight: 0.01
+  max_iterations : 100000
+  eps_angle: 5
+  left_rate_to_all_candidates: 0.5 #Find planes until this rate left in overall cloud
+  max_number_of_planes: 2 #max number of found planes
+plane_intersection: #define the intersection between plane A and B. It is a ideal line.
+  #index_cloud_plane_a: 0 # Define plane A since the ransac estimator generate an array of planes
+  #index_cloud_plane_b: 1 # Define plane B since the ransac estimator generate an array of planes
+  distance_to_line_threshold: 0.01 # Threshold that defines and select real points that are included into the ideal line region.
+pose_filter:
+  welding_interval: 6 #how many points will be generated
+
+#MODEL TYPES INDEXES
+#    SACMODEL_PLANE                 - 0
+#    SACMODEL_LINE,                 - 1
+#    SACMODEL_CIRCLE2D,             - 2
+#    SACMODEL_CIRCLE3D,             - 3
+#    SACMODEL_SPHERE,               - 4
+#    SACMODEL_CYLINDER,             - 5
+#    SACMODEL_CONE,                 - 6
+#    SACMODEL_TORUS,                - 7
+#    SACMODEL_PARALLEL_LINE,        - 8
+#    SACMODEL_PERPENDICULAR_PLANE,  - 9
+#    SACMODEL_PARALLEL_LINES,       - 10
+#    SACMODEL_NORMAL_PLANE,         - 11
+#    SACMODEL_NORMAL_SPHERE,        - 12
+#    SACMODEL_REGISTRATION,         - 13
+#    SACMODEL_REGISTRATION_2D,      - 14
+#    SACMODEL_PARALLEL_PLANE,       - 15
+#    SACMODEL_NORMAL_PARALLEL_PLANE,- 16
+#    SACMODEL_STICK                 - 17

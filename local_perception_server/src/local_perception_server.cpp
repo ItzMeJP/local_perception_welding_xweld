@@ -890,7 +890,7 @@ namespace local_perception_server {
 
         else if (cropbox_frame_id_norm_ == CAMERA_FRAME_NORM_TYPE::OPTICAL) {
 
-            quality_result_.output.quality_list.clear();
+            q_arr.quality_list.clear();
             buildResult(each_point_distance_to_welding_line,"distance", q_arr);
             buildResult(each_point_y_distance_to_welding_line,"y", q_arr);
             buildResult(each_point_z_distance_to_welding_line,"z", q_arr);
